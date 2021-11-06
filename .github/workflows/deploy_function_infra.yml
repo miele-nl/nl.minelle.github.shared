@@ -20,19 +20,10 @@ env:
   APPWRITE_ENDPOINT: ${{ secrets.appwrite-endpoint }}
 
 jobs:
-  check-matrix:
-    name: check matrix
-    runs-on: self-hosted
-    steps: 
-      - name: check matrix
-        run: |
-          echo ${{ inputs.files }}
-          
   infra:
     name: deploy function infra
     runs-on: self-hosted
-    needs: 
-      - check-matrix
+
     strategy:
       fail-fast: true
       matrix: ${{ fromJson(inputs.files) }}
@@ -47,7 +38,7 @@ jobs:
       - name: get function name
         id: get-function-name
         run: |
-          functionJson=$(cat matrix.files)
+          functionJson=$(cat ${{ matrix.files }})
           functionName=$(jq -r '.name' <<< $functionJson)
           echo "::set-output name=functionName::$functionName"
 
