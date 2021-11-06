@@ -129,7 +129,6 @@ jobs:
 
       - name: update collection
         id: update-collection
-        if: ${{ steps.get-collection-id.outputs.collectionId == '' }}
         run: |
           cd artifacts/.scripts
           . update_collection.sh \
