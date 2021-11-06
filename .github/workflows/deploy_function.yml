@@ -15,6 +15,8 @@ on:
         required: true
       function-apikey:
         required: true
+      github-token:
+        required: true
 
 env:
   APPWRITE_PROJECT: ${{ secrets.appwrite-project }}
@@ -43,7 +45,7 @@ jobs:
           repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
           ref: miele-nl-workflow
           path: './infra'
-          token: ${{ secrets._GITHUB_PAT }} 
+          token: ${{ secrets.github-token }} 
 
       - name: get function id
         id: get-function-id
@@ -110,7 +112,7 @@ jobs:
           repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
           ref: miele-nl-workflow
           path: './infra'
-          token: ${{ secrets._GITHUB_PAT }} 
+          token: ${{ secrets.github-token }} 
         
       - name: initialize build
         id: build-init
@@ -167,7 +169,7 @@ jobs:
           repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
           ref: miele-nl-workflow
           path: './infra'
-          token: ${{ secrets._GITHUB_PAT }} 
+          token: ${{ secrets.github-token }} 
         
       - name: deploy tag
         id: deploy-tag
