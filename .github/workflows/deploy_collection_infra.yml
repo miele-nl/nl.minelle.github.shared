@@ -24,6 +24,7 @@ env:
 
 jobs:
   init:
+    # first create all empty collections, because document type rules must reference a collection ID
     name: create if not exists
     runs-on: self-hosted
 
@@ -62,8 +63,7 @@ jobs:
         run: |
           cd artifacts/.scripts
           . create_collection.sh \
-            "${{ steps.get-collection-name.outputs.collectionName }}" \
-            "[]" "[]" "[]"
+            "${{ steps.get-collection-name.outputs.collectionName }}" 
           collectionId=$(cat _create_collection.txt)
           echo "::set-output name=collectionId::$collectionId"
 
@@ -87,6 +87,10 @@ jobs:
     needs:
       - init
 
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJson(inputs.files) }}
+
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: checkout repo
@@ -94,7 +98,45 @@ jobs:
         with:
           path: './artifacts'
 
+      - name: get collection name
+        id: get-collection-name
+        run: |
+          collectionJson=$(cat ${{ inputs.path }}/${{ matrix.files }})
+          collectionName=$(jq -r '.name' <<< $collectionJson)
+          collectionRules=$(jq '.rules' <<< $collectionJson)
+          collectionRead=$(jq '.read' <<< $collectionJson)
+          collectionWrite=$(jq '.write' <<< $collectionJson)
+          echo "::set-output name=name::$collectionName"
+          echo "::set-output name=read::$collectionRead"
+          echo "::set-output name=write::$collectionWrite"
+
+      - name: get collection id
+        id: get-collection-id
+        run: |
+          cd artifacts/.scripts
+          . get_collection_id.sh "${{ steps.get-collection-name.outputs.name }}"
+          collectionId=$(cat _get_collection_id.txt)
+          echo "::set-output name=collectionId::$collectionId"
+
       - name: prepare rules
         id: prepare-rules
         run: |
-          echo "${{ needs.init.outputs.collectionId }}"
+          cd artifacts/.scripts
+          . prepare_rules.sh \
+            "${{ inputs.path }}/${{ matrix.files }}"
+          rules=$(cat _prepare_rules.txt)
+          echo "::set-output name=rules::$rules"
+
+      - name: update collection
+        id: update-collection
+        if: ${{ steps.get-collection-id.outputs.collectionId == '' }}
+        run: |
+          cd artifacts/.scripts
+          . update_collection.sh \
+            "${{ steps.get-collection-name.outputs.name }}" \
+            "${{ steps.get-collection-id.outputs.collectionId }}" \
+            "${{ steps.get-collection-name.outputs.read }}" \
+            "${{ steps.get-collection-name.outputs.write }}" \
+            "${{ steps.prepare-rules.outputs.rules }}" 
+
+
