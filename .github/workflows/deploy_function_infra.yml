@@ -13,8 +13,6 @@ on:
         required: true
       appwrite-apikey:
         required: true
-      github-token:
-        required: true
 
 env:
   APPWRITE_PROJECT: ${{ secrets.appwrite-project }}
@@ -36,13 +34,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           path: './artifacts'
-      - name: checkout infra
-        uses: actions/checkout@v2
-        with:
-          repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
-          ref: miele-nl-workflow
-          path: './infra'
-          token: ${{ secrets.github-token }} 
 
       - name: get function name
         id: get-function-name
@@ -54,7 +45,7 @@ jobs:
       - name: get function id
         id: get-function-id
         run: |
-          cd infra/.scripts
+          cd artifacts/.scripts
           . get_function_id.sh "${{ steps.get-function-name.outputs.functionName }}"
           functionId=$(cat _get_function_id.txt)
           echo "::set-output name=functionId::$functionId"
@@ -63,7 +54,7 @@ jobs:
         id: create-function
         if: ${{ steps.get-function-id.outputs.functionId == '' }}
         run: |
-          cd infra/.scripts
+          cd artifacts/.scripts
           . create_function.sh \
             "${{ steps.get-function-name.outputs.functionName }}" \
             "$GITHUB_WORKSPACE/artifacts/.ci/function.json"
