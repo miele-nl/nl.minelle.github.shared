@@ -31,7 +31,7 @@ jobs:
     runs-on: self-hosted
 
     outputs:
-      functionId: ${{ steps.set-function-id.outputs.functionId }}
+      functionId: ${{ steps.get-function-id.outputs.functionId }}
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -55,16 +55,10 @@ jobs:
           functionId=$(cat _get_function_id.txt)
           echo "::set-output name=functionId::$functionId"
 
-      - name: create function
-        id: create-function
+      - name: fail if function does not exist
+        id: fail-if-not-found
         if: ${{ steps.get-function-id.outputs.functionId == '' }}
-        run: |
-          cd infra/.scripts
-          . create_function.sh \
-            "${{ env.APPWRITE_FUNCTION_NAME }}" \
-            "$GITHUB_WORKSPACE/artifacts/.ci/function.json"
-          functionId=$(cat _create_function.txt)
-          echo "::set-output name=functionId::$functionId"
+        run: exit 1
 
       - name: update function
         id: update-function
@@ -75,19 +69,6 @@ jobs:
             "${{ env.APPWRITE_FUNCTION_NAME }}" \
             "${{ steps.get-function-id.outputs.functionId }}" \
             "$GITHUB_WORKSPACE/artifacts/.ci/function.json"
-
-      - name: set functionId
-        id: set-function-id
-        run: |
-          if [ "${{ steps.get-function-id.outputs.functionId }}" == "" ]; then
-            echo "::set-output name=functionId::${{ steps.create-function.outputs.functionId}}"
-          else
-            echo "::set-output name=functionId::${{ steps.get-function-id.outputs.functionId}}"
-          fi
-
-      - name: check
-        run: |
-          echo "functionId: ${{ steps.set-function-id.outputs.functionId }}"
 
   build:
     name: build and upload code    
