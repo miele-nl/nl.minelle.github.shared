@@ -60,7 +60,7 @@ jobs:
           cd artifacts/.scripts
           . create_function.sh \
             "${{ steps.get-function-name.outputs.functionName }}" \
-            "$GITHUB_WORKSPACE/artifacts/.ci/function.json"
+            "${{ inputs.path }}/${{ matrix.files }}"
           functionId=$(cat _create_function.txt)
           echo "::set-output name=functionId::$functionId"
 
