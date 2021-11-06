@@ -1,0 +1,180 @@
+name: deploy function reusable workflow
+
+on:
+  workflow_call:
+    inputs:
+      function-name:
+        type: string
+        required: true
+    secrets: 
+      appwrite-endpoint:
+        required: true
+      appwrite-project:
+        required: true
+      appwrite-apikey:
+        required: true
+      function-apikey:
+        required: true
+
+env:
+  APPWRITE_PROJECT: ${{ secrets.appwrite-project }}
+  APPWRITE_APIKEY: ${{ secrets.appwrite-apikey }}
+  APPWRITE_ENDPOINT: ${{ secrets.appwrite-endpoint }}
+  APPWRITE_FUNCTION_NAME: ${{ inputs.function-name }}
+  APPWRITE_FUNCTION_APIKEY: ${{ secrets.function-apikey }}
+
+jobs:
+  infra:
+    name: deploy function infra
+    runs-on: self-hosted
+
+    outputs:
+      functionId: ${{ steps.set-function-id.outputs.functionId }}
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: checkout repo
+        uses: actions/checkout@v2
+        with:
+          path: './artifacts'
+      - name: checkout infra
+        uses: actions/checkout@v2
+        with:
+          repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
+          ref: miele-nl-workflow
+          path: './infra'
+          token: ${{ secrets._GITHUB_PAT }} 
+
+      - name: get function id
+        id: get-function-id
+        run: |
+          cd infra/.scripts
+          . get_function_id.sh "${{ env.APPWRITE_FUNCTION_NAME }}"
+          functionId=$(cat _get_function_id.txt)
+          echo "::set-output name=functionId::$functionId"
+
+      - name: create function
+        id: create-function
+        if: ${{ steps.get-function-id.outputs.functionId == '' }}
+        run: |
+          cd infra/.scripts
+          . create_function.sh \
+            "${{ env.APPWRITE_FUNCTION_NAME }}" \
+            "$GITHUB_WORKSPACE/artifacts/.ci/function.json"
+          functionId=$(cat _create_function.txt)
+          echo "::set-output name=functionId::$functionId"
+
+      - name: update function
+        id: update-function
+        if: ${{ steps.get-function-id.outputs.functionId != '' }}
+        run: |
+          cd infra/.scripts
+          . update_function.sh \
+            "${{ env.APPWRITE_FUNCTION_NAME }}" \
+            "${{ steps.get-function-id.outputs.functionId }}" \
+            "$GITHUB_WORKSPACE/artifacts/.ci/function.json"
+
+      - name: set functionId
+        id: set-function-id
+        run: |
+          if [ "${{ steps.get-function-id.outputs.functionId }}" == "" ]; then
+            echo "::set-output name=functionId::${{ steps.create-function.outputs.functionId}}"
+          else
+            echo "::set-output name=functionId::${{ steps.get-function-id.outputs.functionId}}"
+          fi
+
+      - name: check
+        run: |
+          echo "functionId: ${{ steps.set-function-id.outputs.functionId }}"
+
+  build:
+    name: build and upload code    
+    runs-on: self-hosted
+
+    needs:
+      - infra
+
+    outputs: 
+      tagId: ${{ steps.create-tag.outputs.tagId }}
+
+    steps:
+
+      - name: checkout repo
+        uses: actions/checkout@v2
+        with:
+          path: './artifacts'
+
+      - name: checkout infra
+        uses: actions/checkout@v2
+        with:
+          repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
+          ref: miele-nl-workflow
+          path: './infra'
+          token: ${{ secrets._GITHUB_PAT }} 
+        
+      - name: initialize build
+        id: build-init
+        run: |
+          [ ! -d "package" ] && mkdir package
+          tagJson=$(cat $GITHUB_WORKSPACE/artifacts/.ci/tag.json)
+          codeFile=$(jq -r '.code' <<< $tagJson)
+          echo "::set-output name=codeFile::$GITHUB_WORKSPACE/package/$codeFile"
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 15.x
+
+      - name: build
+        id: build
+        run: |
+          cd artifacts/
+          npm ci
+          npm run build --if-present
+          # npm test
+          tar -czvf ${{ steps.build-init.outputs.codeFile }} $GITHUB_WORKSPACE/artifacts/
+          # codeData=$(tar -cz $GITHUB_WORKSPACE/artifacts | base64 -w 0)
+          # echo "::set-output name=codeData::$codeData"
+
+      - name: create tag
+        id: create-tag
+        run: |
+          cd infra/.scripts
+          . create_tag.sh \
+            "${{ needs.infra.outputs.functionId }}" \
+            "${{ steps.build-init.outputs.codeFile }}" \
+            "$GITHUB_WORKSPACE/artifacts/.ci/tag.json"
+          functionId=$(cat _create_tag.txt)
+          echo "::set-output name=tagId::$tagId"
+
+      - name: check
+        run: | 
+          echo "tagId: ${{ steps.create-tag.outputs.tagId }}"
+
+  deploy:
+    name: update tag    
+    runs-on: self-hosted
+
+    needs:
+      - infra
+      - build
+
+    steps:
+
+      - name: checkout infra
+        uses: actions/checkout@v2
+        with:
+          repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
+          ref: miele-nl-workflow
+          path: './infra'
+          token: ${{ secrets._GITHUB_PAT }} 
+        
+      - name: deploy tag
+        id: deploy-tag
+        run: |
+          cd infra/.scripts
+          . update_function_tag.sh \
+            "${{ needs.infra.outputs.functionId }}" \
+            "${{ needs.build.outputs.tagId }}"
+
+
