@@ -1,0 +1,79 @@
+name: deploy function reusable workflow
+
+on:
+  workflow_call:
+    inputs:
+      files:
+        type: string
+        required: true
+      path:
+        type: string
+        required: true
+    secrets: 
+      appwrite-endpoint:
+        required: true
+      appwrite-project:
+        required: true
+      appwrite-apikey:
+        required: true
+
+env:
+  APPWRITE_PROJECT: ${{ secrets.appwrite-project }}
+  APPWRITE_APIKEY: ${{ secrets.appwrite-apikey }}
+  APPWRITE_ENDPOINT: ${{ secrets.appwrite-endpoint }}
+
+jobs:
+  infra:
+    name: deploy function infra
+    runs-on: self-hosted
+
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJson(inputs.files) }}
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: checkout repo
+        uses: actions/checkout@v2
+        with:
+          path: './artifacts'
+
+      - name: get function name
+        id: get-function-name
+        run: |
+          functionJson=$(cat ${{ inputs.path }}/${{ matrix.files }})
+          functionName=$(jq -r '.name' <<< $functionJson)
+          echo "::set-output name=functionName::$functionName"
+
+      - name: get function id
+        id: get-function-id
+        run: |
+          cd artifacts/.scripts
+          . get_function_id.sh "${{ steps.get-function-name.outputs.functionName }}"
+          functionId=$(cat _get_function_id.txt)
+          echo "::set-output name=functionId::$functionId"
+
+      - name: create function
+        id: create-function
+        if: ${{ steps.get-function-id.outputs.functionId == '' }}
+        run: |
+          cd artifacts/.scripts
+          . create_function.sh \
+            "${{ steps.get-function-name.outputs.functionName }}" \
+            "$GITHUB_WORKSPACE/artifacts/.ci/function.json"
+          functionId=$(cat _create_function.txt)
+          echo "::set-output name=functionId::$functionId"
+
+      - name: set functionId
+        id: set-function-id
+        run: |
+          if [ "${{ steps.get-function-id.outputs.functionId }}" == "" ]; then
+            echo "::set-output name=functionId::${{ steps.create-function.outputs.functionId}}"
+          else
+            echo "::set-output name=functionId::${{ steps.get-function-id.outputs.functionId}}"
+          fi
+
+      - name: check
+        run: |
+          echo "functionId: ${{ steps.set-function-id.outputs.functionId }}"
+
