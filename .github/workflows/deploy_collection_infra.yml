@@ -61,18 +61,9 @@ jobs:
         if: ${{ steps.get-collection-id.outputs.collectionId == '' }}
         run: |
           cd artifacts/.scripts
-          json=$(cat ${{ inputs.path }}/${{ matrix.files }})
-          echo $(jq  \
-            '{ 
-                name: .name, 
-                read: [], 
-                write: [],
-                rules: [],
-            }' <<< $json) > tmp.json
-
           . create_collection.sh \
             "${{ steps.get-collection-name.outputs.collectionName }}" \
-            "tmp.json"
+            "[]" "[]" "[]"
           collectionId=$(cat _create_collection.txt)
           echo "::set-output name=collectionId::$collectionId"
 
