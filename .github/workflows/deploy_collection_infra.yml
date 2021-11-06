@@ -1,0 +1,109 @@
+name: deploy collection reusable workflow
+
+on:
+  workflow_call:
+    inputs:
+      files:
+        type: string
+        required: true
+      path:
+        type: string
+        required: true
+    secrets: 
+      appwrite-endpoint:
+        required: true
+      appwrite-project:
+        required: true
+      appwrite-apikey:
+        required: true
+
+env:
+  APPWRITE_PROJECT: ${{ secrets.appwrite-project }}
+  APPWRITE_APIKEY: ${{ secrets.appwrite-apikey }}
+  APPWRITE_ENDPOINT: ${{ secrets.appwrite-endpoint }}
+
+jobs:
+  init:
+    name: create if not exists
+    runs-on: self-hosted
+
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJson(inputs.files) }}
+
+    outputs:
+      collectionId: ${{ steps.set-collection-id.outputs.collectionId }}
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: checkout repo
+        uses: actions/checkout@v2
+        with:
+          path: './artifacts'
+
+      - name: get collection name
+        id: get-collection-name
+        run: |
+          collectionJson=$(cat ${{ inputs.path }}/${{ matrix.files }})
+          collectionName=$(jq -r '.name' <<< $collectionJson)
+          echo "::set-output name=collectionName::$collectionName"
+
+      - name: get collection id
+        id: get-collection-id
+        run: |
+          cd artifacts/.scripts
+          . get_collection_id.sh "${{ steps.get-collection-name.outputs.collectionName }}"
+          collectionId=$(cat _get_collection_id.txt)
+          echo "::set-output name=collectionId::$collectionId"
+
+      - name: create collection
+        id: create-collection
+        if: ${{ steps.get-collection-id.outputs.collectionId == '' }}
+        run: |
+          cd artifacts/.scripts
+          json=$(cat ${{ inputs.path }}/${{ matrix.files }})
+          echo $(jq  \
+            '{ 
+                name: .name, 
+                read: [], 
+                write: [],
+                rules: [],
+            }' <<< $json) > tmp.json
+
+          . create_collection.sh \
+            "${{ steps.get-collection-name.outputs.collectionName }}" \
+            "tmp.json"
+          collectionId=$(cat _create_collection.txt)
+          echo "::set-output name=collectionId::$collectionId"
+
+      - name: set collectionId
+        id: set-collection-id
+        run: |
+          if [ "${{ steps.get-collection-id.outputs.collectionId }}" == "" ]; then
+            echo "::set-output name=collectionId::${{ steps.create-collection.outputs.collectionId}}"
+          else
+            echo "::set-output name=collectionId::${{ steps.get-collection-id.outputs.collectionId}}"
+          fi
+
+      - name: check
+        run: |
+          echo "collectionId: ${{ steps.set-collection-id.outputs.collectionId }}"
+
+  update:
+    name: create if not exists
+    runs-on: self-hosted
+
+    needs:
+      - init
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: checkout repo
+        uses: actions/checkout@v2
+        with:
+          path: './artifacts'
+
+      - name: prepare rules
+        id: prepare-rules
+        run: |
+          echo "${{ needs.init.outputs.collectionId }}"
