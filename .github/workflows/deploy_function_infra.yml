@@ -6,6 +6,9 @@ on:
       files:
         type: string
         required: true
+      path:
+        type: string
+        required: true
     secrets: 
       appwrite-endpoint:
         required: true
@@ -38,7 +41,7 @@ jobs:
       - name: get function name
         id: get-function-name
         run: |
-          functionJson=$(cat ${{ matrix.files }})
+          functionJson=$(cat ${{ inputs.path }}/${{ matrix.files }})
           functionName=$(jq -r '.name' <<< $functionJson)
           echo "::set-output name=functionName::$functionName"
 
