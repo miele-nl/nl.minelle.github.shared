@@ -20,9 +20,19 @@ env:
   APPWRITE_ENDPOINT: ${{ secrets.appwrite-endpoint }}
 
 jobs:
+  check-matrix:
+    name: check matrix
+    runs-on: self-hosted
+    steps: 
+      - name: check matrix
+        run: |
+          echo ${{ inputs.files }}
+          
   infra:
     name: deploy function infra
     runs-on: self-hosted
+    needs: 
+      - check-matrix
     strategy:
       fail-fast: true
       matrix: ${{ fromJson(inputs.files) }}
