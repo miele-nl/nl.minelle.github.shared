@@ -109,6 +109,7 @@ jobs:
       - name: build
         id: build
         run: |
+          npm --version
           npm install -g bundle-deps
 
           cd artifacts/
@@ -118,7 +119,8 @@ jobs:
           tar -czvf ${{ steps.build-init.outputs.codeFile }} $GITHUB_WORKSPACE/artifacts/
 
           bundle-deps
-          npm pack --json
+          json=$(npm pack --json)
+          echo $json 
 
       - name: create tag
         id: create-tag
