@@ -6,6 +6,10 @@ on:
       function-name:
         type: string
         required: true
+      version:
+        type: string
+        required: false
+        default: "0.0.0"
     secrets: 
       appwrite-endpoint:
         required: true
@@ -43,7 +47,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
-          ref: miele-nl-workflow
           path: './infra'
           token: ${{ secrets.github-token }} 
 
@@ -91,33 +94,45 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
-          ref: miele-nl-workflow
           path: './infra'
           token: ${{ secrets.github-token }} 
         
-      - name: initialize build
-        id: build-init
-        run: |
-          [ ! -d "package" ] && mkdir package
-          tagJson=$(cat $GITHUB_WORKSPACE/artifacts/.ci/tag.json)
-          codeFile=$(jq -r '.code' <<< $tagJson)
-          echo "::set-output name=codeFile::$GITHUB_WORKSPACE/package/$codeFile"
+      # - name: initialize build
+      #   id: build-init
+      #   run: |
+      #     [ ! -d "package" ] && mkdir package
+      #     tagJson=$(cat $GITHUB_WORKSPACE/artifacts/.ci/tag.json)
+      #     codeFile=$(jq -r '.code' <<< $tagJson)
+      #     echo "::set-output name=codeFile::$GITHUB_WORKSPACE/package/$codeFile"
 
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 15.x
+          node-version: 16.x
 
       - name: build
         id: build
         run: |
+          npm install -g bundle-deps
+
           cd artifacts/
           npm ci
-          npm run build --if-present
           # npm test
-          tar -czvf ${{ steps.build-init.outputs.codeFile }} $GITHUB_WORKSPACE/artifacts/
-          # codeData=$(tar -cz $GITHUB_WORKSPACE/artifacts | base64 -w 0)
-          # echo "::set-output name=codeData::$codeData"
+
+          pkgName=$(npm pkg get name | tr -d '"')
+          echo $pkgName
+          echo "version: ${{ inputs.version }}"
+          npm pkg set version="${{ inputs.version }}"
+
+          bundle-deps
+          json=$(npm pack)
+          tgzFile=$(echo $json | grep "^$pkgName.*\.tgz")
+          codeFile=${tgzFile%.tgz}.tar.gz
+
+          mv -- "$tgzFile" "$codeFile"
+
+          echo "package created: $codeFile"
+          echo "::set-output name=codeFile::$codeFile"
 
       - name: create tag
         id: create-tag
@@ -125,8 +140,9 @@ jobs:
           cd infra/.scripts
           . create_tag.sh \
             "${{ needs.infra.outputs.functionId }}" \
-            "${{ steps.build-init.outputs.codeFile }}" \
-            "$GITHUB_WORKSPACE/artifacts/.ci/tag.json"
+            "${{ steps.build.outputs.codeFile }}" \
+            ".ci/tag.json" \
+            "$GITHUB_WORKSPACE/artifacts/"
           functionId=$(cat _create_tag.txt)
           echo "::set-output name=tagId::$tagId"
 
@@ -148,7 +164,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
-          ref: miele-nl-workflow
           path: './infra'
           token: ${{ secrets.github-token }} 
         
