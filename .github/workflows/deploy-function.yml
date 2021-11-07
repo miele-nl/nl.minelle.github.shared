@@ -30,6 +30,44 @@ env:
   APPWRITE_FUNCTION_APIKEY: ${{ secrets.function-apikey }}
 
 jobs:
+
+  list-collections:
+    name: list collections
+    runs-on: self-hosted
+
+    outputs:
+      collections: ${{ steps.list-collections.outputs.collections }}
+
+    steps:
+      - name: list all collections
+        id: list-collections
+        run: |
+          cd infra/.scripts
+          . list_collections.sh 100
+          collections=$(cat _list_collections.txt)
+          matrix=$(echo $collections | jq '{
+            name: .name,
+            id: ."\$id"
+            }')
+          echo "::set-output name=collections::$matrix"
+
+  env:
+    name: set environment
+    runs-on: self-hosted
+
+    strategy:
+      fail-fast: true
+      matrix: ${{ needs.list-collections.outputs.collections }}
+
+    steps: 
+      - name: set environment variable
+        run: |
+            varname="collection_${{ matrix.name }}"
+            varname=${$varname^^}
+            cmd=$(echo "export $varname=${{ matrix.id }}")
+            echo $cmd
+            eval $cmd
+            
   infra:
     name: deploy function infra
     runs-on: self-hosted
@@ -84,7 +122,6 @@ jobs:
       tagId: ${{ steps.create-tag.outputs.tagId }}
 
     steps:
-
       - name: checkout repo
         uses: actions/checkout@v2
         with:
@@ -97,14 +134,6 @@ jobs:
           path: './infra'
           token: ${{ secrets.github-token }} 
         
-      # - name: initialize build
-      #   id: build-init
-      #   run: |
-      #     [ ! -d "package" ] && mkdir package
-      #     tagJson=$(cat $GITHUB_WORKSPACE/artifacts/.ci/tag.json)
-      #     codeFile=$(jq -r '.code' <<< $tagJson)
-      #     echo "::set-output name=codeFile::$GITHUB_WORKSPACE/package/$codeFile"
-
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
