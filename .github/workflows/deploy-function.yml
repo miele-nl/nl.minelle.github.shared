@@ -125,9 +125,14 @@ jobs:
           npm pkg set version="${{ inputs.version }}"
 
           bundle-deps
-          npm pack
+          json=$(npm pack)
+          echo $json
           tgzFile=$(echo $json | grep "^$pkgName.*\.tgz")
+          echo $tgzFile
+
           codeFile=${tgzFile%.tgz}.tar.gz
+          echo $codeFile
+          
           mv -- "$tgzFile" "$codeFile"
 
           echo "package created: $codeFile"
