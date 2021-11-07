@@ -58,6 +58,7 @@ jobs:
             id: ."$id"
             } ]')
           echo "::set-output name=collections::$matrix"
+          echo $matrix
 
   environment:
     name: set environment
@@ -67,7 +68,7 @@ jobs:
 
     strategy:
       fail-fast: true
-      matrix: ${{ needs.list-collections.outputs.collections }}
+      matrix: ${{ fromJson(needs.list-collections.outputs.collections) }}
 
     steps: 
       - name: set environment variable
