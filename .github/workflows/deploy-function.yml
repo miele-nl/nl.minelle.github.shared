@@ -55,7 +55,7 @@ jobs:
           collections=$(cat _list_collections.txt)
           matrix=$(echo $collections | jq '{
             name: .name,
-            id: ."\$id"
+            id: ."$id"
             }')
           echo "::set-output name=collections::$matrix"
 
