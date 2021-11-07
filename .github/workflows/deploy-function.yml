@@ -93,13 +93,13 @@ jobs:
           path: './infra'
           token: ${{ secrets.github-token }} 
         
-      - name: initialize build
-        id: build-init
-        run: |
-          [ ! -d "package" ] && mkdir package
-          tagJson=$(cat $GITHUB_WORKSPACE/artifacts/.ci/tag.json)
-          codeFile=$(jq -r '.code' <<< $tagJson)
-          echo "::set-output name=codeFile::$GITHUB_WORKSPACE/package/$codeFile"
+      # - name: initialize build
+      #   id: build-init
+      #   run: |
+      #     [ ! -d "package" ] && mkdir package
+      #     tagJson=$(cat $GITHUB_WORKSPACE/artifacts/.ci/tag.json)
+      #     codeFile=$(jq -r '.code' <<< $tagJson)
+      #     echo "::set-output name=codeFile::$GITHUB_WORKSPACE/package/$codeFile"
 
       - name: Use Node.js
         uses: actions/setup-node@v2
@@ -114,13 +114,14 @@ jobs:
 
           cd artifacts/
           npm ci
-          npm run build --if-present
+          # npm run build --if-present
           # npm test
-          tar -czvf ${{ steps.build-init.outputs.codeFile }} $GITHUB_WORKSPACE/artifacts/
+          # tar -czvf ${{ steps.build-init.outputs.codeFile }} $GITHUB_WORKSPACE/artifacts/
 
+          pkgName=$(npm pkg get name | tr -d '"')
           bundle-deps
           json=$(npm pack --json)
-          echo $json 
+          echo "::set-output name=codeFile::$GITHUB_WORKSPACE/artifacts/$($json | grep "^$pkgName.*\.tgz")"
 
       - name: create tag
         id: create-tag
@@ -128,7 +129,7 @@ jobs:
           cd infra/.scripts
           . create_tag.sh \
             "${{ needs.infra.outputs.functionId }}" \
-            "${{ steps.build-init.outputs.codeFile }}" \
+            "${{ steps.build.outputs.codeFile }}" \
             "$GITHUB_WORKSPACE/artifacts/.ci/tag.json"
           functionId=$(cat _create_tag.txt)
           echo "::set-output name=tagId::$tagId"
