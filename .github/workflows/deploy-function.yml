@@ -53,10 +53,10 @@ jobs:
           cd infra/.scripts
           . list_collections.sh 100
           collections=$(cat _list_collections.txt)
-          matrix=$(echo $collections |  jq '[ .[] |  {
+          matrix=$(echo $collections |  jq --compact-output  '[ .[] |  {
             name: .name,
             id: ."$id"
-            }]')
+            } ]')
           echo "::set-output name=collections::$matrix"
 
   environment:
