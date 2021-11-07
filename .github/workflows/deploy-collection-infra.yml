@@ -25,7 +25,7 @@ env:
 jobs:
   init:
     # first create all empty collections, because document type rules must reference a collection ID
-    name: create if not exists
+    name: create empty
     runs-on: self-hosted
 
     strategy:
@@ -81,7 +81,7 @@ jobs:
           echo "collectionId: ${{ steps.set-collection-id.outputs.collectionId }}"
 
   update:
-    name: create if not exists
+    name: update
     runs-on: self-hosted
 
     needs:
