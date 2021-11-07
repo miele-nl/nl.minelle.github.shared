@@ -129,7 +129,7 @@ jobs:
           . update_collection.sh \
             "${{ steps.get-collection-name.outputs.name }}" \
             "${{ steps.get-collection-id.outputs.collectionId }}" \
-            "${{ steps.prepare-rules.outputs.rules }}" \
+            '${{ steps.prepare-rules.outputs.rules }}' \
             "${{ inputs.path }}/${{ matrix.files }}"
 
 
