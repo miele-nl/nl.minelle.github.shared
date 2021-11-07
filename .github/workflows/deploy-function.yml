@@ -121,9 +121,12 @@ jobs:
           pkgName=$(npm pkg get name | tr -d '"')
           bundle-deps
           json=$(npm pack --json)
-          tgz=$(echo $json | grep "^$pkgName.*\.tgz")
-          echo "package created: $tgz"
-          echo "::set-output name=codeFile::$tgz"
+          tgzFile=$(echo $json | grep "^$pkgName.*\.tgz")
+          codeFile=${tgzFile%.tgz}.tar.gz
+          mv -- "$tgzFile" "$codeFile"
+
+          echo "package created: $codeFile"
+          echo "::set-output name=codeFile::$codeFile"
 
       - name: create tag
         id: create-tag
