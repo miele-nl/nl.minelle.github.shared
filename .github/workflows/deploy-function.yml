@@ -112,12 +112,14 @@ jobs:
 
       - name: build
         id: build
+        env:
+          CI: true  
         run: |
           npm install -g bundle-deps
 
           cd artifacts/
-          npm ci
-          # npm test
+          npm ci --include dev
+          npm test
 
           pkgName=$(npm pkg get name | tr -d '"')
           echo $pkgName
