@@ -113,7 +113,6 @@ jobs:
       - name: build
         id: build
         run: |
-          npm pkg --version
           npm install -g bundle-deps
 
           cd artifacts/
@@ -126,7 +125,7 @@ jobs:
           npm pkg set version="${{ inputs.version }}"
 
           bundle-deps
-          json=$(npm pack --json)
+          npm pack
           tgzFile=$(echo $json | grep "^$pkgName.*\.tgz")
           codeFile=${tgzFile%.tgz}.tar.gz
           mv -- "$tgzFile" "$codeFile"
