@@ -116,8 +116,7 @@ jobs:
           npm run build --if-present
           # npm test
           tar -czvf ${{ steps.build-init.outputs.codeFile }} $GITHUB_WORKSPACE/artifacts/
-          # codeData=$(tar -cz $GITHUB_WORKSPACE/artifacts | base64 -w 0)
-          # echo "::set-output name=codeData::$codeData"
+          npm pack --dry-run --json --pack-destination ../package
 
       - name: create tag
         id: create-tag
