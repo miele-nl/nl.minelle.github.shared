@@ -121,7 +121,7 @@ jobs:
           # npm test
 
           pkgName=$(npm pkg get name | tr -d '"')
-          npm pkg set version "${{ inputs.version }}"
+          npm pkg set version="${{ inputs.version }}"
 
           bundle-deps
           json=$(npm pack --json)
