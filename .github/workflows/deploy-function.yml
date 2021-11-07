@@ -59,9 +59,11 @@ jobs:
             }]')
           echo "::set-output name=collections::$matrix"
 
-  env:
+  environment:
     name: set environment
     runs-on: self-hosted
+    needs:
+      - list-collections
 
     strategy:
       fail-fast: true
@@ -79,6 +81,9 @@ jobs:
   infra:
     name: deploy function infra
     runs-on: self-hosted
+
+    needs:
+      - environment
 
     outputs:
       functionId: ${{ steps.get-function-id.outputs.functionId }}
