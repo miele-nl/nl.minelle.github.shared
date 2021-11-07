@@ -43,7 +43,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
-          ref: miele-nl-workflow
           path: './infra'
           token: ${{ secrets.github-token }} 
 
