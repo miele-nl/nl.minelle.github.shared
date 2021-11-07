@@ -6,6 +6,10 @@ on:
       function-name:
         type: string
         required: true
+      version:
+        type: string
+        required: false
+        default: "0.0.0"
     secrets: 
       appwrite-endpoint:
         required: true
@@ -114,11 +118,11 @@ jobs:
 
           cd artifacts/
           npm ci
-          # npm run build --if-present
           # npm test
-          # tar -czvf ${{ steps.build-init.outputs.codeFile }} $GITHUB_WORKSPACE/artifacts/
 
           pkgName=$(npm pkg get name | tr -d '"')
+          npm pkg set version "${{ inputs.version }}""
+
           bundle-deps
           json=$(npm pack --json)
           tgzFile=$(echo $json | grep "^$pkgName.*\.tgz")
