@@ -132,7 +132,7 @@ jobs:
           . create_tag.sh \
             "${{ needs.infra.outputs.functionId }}" \
             "${{ steps.build.outputs.codeFile }}" \
-            ".ci/tag.json"
+            ".ci/tag.json" \
             "$GITHUB_WORKSPACE/artifacts/"
           functionId=$(cat _create_tag.txt)
           echo "::set-output name=tagId::$tagId"
