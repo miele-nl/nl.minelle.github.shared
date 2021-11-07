@@ -39,6 +39,14 @@ jobs:
       collections: ${{ steps.list-collections.outputs.collections }}
 
     steps:
+      - name: checkout infra
+        uses: actions/checkout@v2
+        with:
+          ref: list-collections
+          repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
+          path: './infra'
+          token: ${{ secrets.github-token }} 
+      
       - name: list all collections
         id: list-collections
         run: |
