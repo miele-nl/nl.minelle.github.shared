@@ -96,6 +96,7 @@ jobs:
       - name: initialize build
         id: build-init
         run: |
+          npm install -g bundle-deps
           [ ! -d "package" ] && mkdir package
           tagJson=$(cat $GITHUB_WORKSPACE/artifacts/.ci/tag.json)
           codeFile=$(jq -r '.code' <<< $tagJson)
