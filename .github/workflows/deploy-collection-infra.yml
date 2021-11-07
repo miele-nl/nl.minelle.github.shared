@@ -103,12 +103,7 @@ jobs:
         run: |
           collectionJson=$(cat ${{ inputs.path }}/${{ matrix.files }})
           collectionName=$(jq -r '.name' <<< $collectionJson)
-          collectionRules=$(jq '.rules' <<< $collectionJson)
-          collectionRead=$(jq '.read' <<< $collectionJson)
-          collectionWrite=$(jq '.write' <<< $collectionJson)
           echo "::set-output name=name::$collectionName"
-          echo "::set-output name=read::$collectionRead"
-          echo "::set-output name=write::$collectionWrite"
 
       - name: get collection id
         id: get-collection-id
@@ -134,8 +129,7 @@ jobs:
           . update_collection.sh \
             "${{ steps.get-collection-name.outputs.name }}" \
             "${{ steps.get-collection-id.outputs.collectionId }}" \
-            "${{ steps.get-collection-name.outputs.read }}" \
-            "${{ steps.get-collection-name.outputs.write }}" \
-            "${{ steps.prepare-rules.outputs.rules }}" 
+            "${{ steps.prepare-rules.outputs.rules }}" \
+            "${{ inputs.path }}/${{ matrix.files }}"
 
 
