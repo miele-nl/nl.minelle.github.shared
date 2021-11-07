@@ -114,7 +114,9 @@ jobs:
           npm run build --if-present
           # npm test
           tar -czvf ${{ steps.build-init.outputs.codeFile }} $GITHUB_WORKSPACE/artifacts/
-          npm pack --dry-run --json
+
+          bundle-deps
+          npm pack --json
 
       - name: create tag
         id: create-tag
