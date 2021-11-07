@@ -56,7 +56,7 @@ jobs:
           matrix=$(echo $collections |  jq '[ .[] |  {
             name: .name,
             id: ."$id"
-            }')
+            }]')
           echo "::set-output name=collections::$matrix"
 
   env:
