@@ -116,7 +116,7 @@ jobs:
           npm install -g bundle-deps
 
           cd artifacts/
-          npm ci
+          npm ci --include dev
           npm test
 
           pkgName=$(npm pkg get name | tr -d '"')
