@@ -53,7 +53,7 @@ jobs:
           cd infra/.scripts
           . list_collections.sh 100
           collections=$(cat _list_collections.txt)
-          matrix=$(echo $collections | jq '{
+          matrix=$(echo $collections |  jq '[ .collections | .[] |  {
             name: .name,
             id: ."$id"
             }')
