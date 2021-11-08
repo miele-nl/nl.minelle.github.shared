@@ -3,10 +3,6 @@ name: cache collection ids
 on:
   workflow_call:
     inputs:
-      force-rebuild:
-        type: boolean
-        required: false
-        default: false
       infra-repository:
         required: true
         type: string
