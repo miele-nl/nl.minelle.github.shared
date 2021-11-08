@@ -46,7 +46,7 @@ jobs:
 
       - name: build cache
         id: build-cache
-        if: inputs.force || steps.use-cache.outputs.cache-hit != 'true'
+        if: inputs.force-rebuild || steps.use-cache.outputs.cache-hit != 'true'
 
         run: |
           [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
