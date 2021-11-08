@@ -31,66 +31,25 @@ env:
 
 jobs:
 
-  list-collections:
-    name: list collections
-    runs-on: self-hosted
 
-    outputs:
-      collections: ${{ steps.list-collections.outputs.collections }}
-
-    steps:
-      - name: checkout infra
-        uses: actions/checkout@v2
-        with:
-          ref: list-collections
-          repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
-          path: './infra'
-          token: ${{ secrets.github-token }} 
-      
-      - name: list all collections
-        id: list-collections
-        run: |
-          cd infra/.scripts
-          . list_collections.sh 100
-          collections=$(cat _list_collections.txt)
-          matrix=$(echo $collections |  jq --compact-output  '[ .[] |  {
-            name: .name,
-            id: ."$id"
-            } ]')
-          echo "::set-output name=collections::{ \"collections\": $matrix }"
-          echo $matrix
-
-  environment:
-    name: set environment
-    runs-on: self-hosted
-    needs:
-      - list-collections
-
-    strategy:
-      fail-fast: true
-      matrix: ${{ fromJson(needs.list-collections.outputs.collections) }}
-
-    steps: 
-      - name: set environment variable
-        run: |
-            collectionName=${{ matrix.collections.name }}
-            collectionId=${{ matrix.collections.id }}
-            # collectionId=$(echo ${{ matrix.collections }} | jq -r '.id')
-
-            varname=$(echo "collection_$collectionName" | tr [:lower:] [:upper:])
-            echo "export $varname=$collectionId" >> env.sh
-            cat env.sh
   infra:
     name: deploy function infra
     runs-on: self-hosted
-
-    needs:
-      - environment
 
     outputs:
       functionId: ${{ steps.get-function-id.outputs.functionId }}
 
     steps:
+      - name: use cache
+        uses: actions/cache@v2
+        with:
+          path: './cache'
+          key: ${{ secrets.appwrite-project }}
+
+      - name: set environment
+        run: |
+          . ./cache/env_collections.sh
+
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: checkout repo
         uses: actions/checkout@v2
