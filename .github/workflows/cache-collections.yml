@@ -68,7 +68,7 @@ jobs:
           key: ${{ secrets.appwrite-project }}-${{ steps.latest-commit.outputs.commit }}
 
       - name: build cache collections
-        id: build-cache collections
+        id: build-cache-collections
         if: steps.use-cache.outputs.cache-hit != 'true'
 
         run: |
@@ -82,7 +82,7 @@ jobs:
           cp _prepare_env.txt ~/.appwrite/cache/env_collections.sh
 
       - name: build cache functions
-        id: build-cache functions
+        id: build-cache-functions
         if: steps.use-cache.outputs.cache-hit != 'true'
 
         run: |
