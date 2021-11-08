@@ -82,12 +82,6 @@ jobs:
           path: ~/.appwrite/cache
           key: ${{ secrets.appwrite-project }}-${{ steps.latest-commit.outputs.commit }}
 
-      - name: set environment
-        run: |
-          ls ~/.appwrite/cache 
-          . ~/.appwrite/cache/env_collections.sh
-          env | grep COLLECTION
-
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: checkout repo
         uses: actions/checkout@v2
@@ -97,7 +91,6 @@ jobs:
       - name: get function id
         id: get-function-id
         run: |
-          env | grep COLLECTION
           cd infra/.scripts
           . get_function_id.sh "${{ env.APPWRITE_FUNCTION_NAME }}"
           functionId=$(cat _get_function_id.txt)
