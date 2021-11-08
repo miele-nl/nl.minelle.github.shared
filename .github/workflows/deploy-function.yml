@@ -73,8 +73,9 @@ jobs:
     steps: 
       - name: set environment variable
         run: |
-            collectionName=$(echo ${{ matrix.collections }} | jq -r '.name')
-            collectionId=$(echo ${{ matrix.collections }} | jq -r '.id')
+            collectionName=${{ matrix.collections.name }}
+            collectionId=${{ matrix.collections.id }}
+            # collectionId=$(echo ${{ matrix.collections }} | jq -r '.id')
 
             varname=$(echo "collection_$collectionName" | tr [:lower:] [:upper:]
             cmd=$(echo "export $varname=$collectionId
