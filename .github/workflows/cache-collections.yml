@@ -1,0 +1,58 @@
+name: cache collection ids
+
+on:
+  workflow_call:
+    inputs:
+      force-rebuild:
+        type: boolean
+        required: false
+        default: false
+    secrets: 
+      appwrite-endpoint:
+        required: true
+      appwrite-project:
+        required: true
+      appwrite-apikey:
+        required: true
+      github-token:
+        required: true
+
+env:
+  APPWRITE_PROJECT: ${{ secrets.appwrite-project }}
+  APPWRITE_APIKEY: ${{ secrets.appwrite-apikey }}
+  APPWRITE_ENDPOINT: ${{ secrets.appwrite-endpoint }}
+
+jobs:
+  build-cache:
+    # first create all empty collections, because document type rules must reference a collection ID
+    name: cache 
+    runs-on: self-hosted
+
+    steps:
+      - name: checkout infra
+        uses: actions/checkout@v2
+        with:
+          ref: list-collections
+          repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
+          path: './infra'
+          token: ${{ secrets.github-token }} 
+
+      - name: use cache
+        uses: actions/cache@v2
+        with:
+          path: './cache'
+          key: ${{ secrets.appwrite-project }}
+
+      - name: build cache
+        id: build-cache
+        if: inputs.force || steps.cache-primes.outputs.cache-hit != 'true'
+
+        run: |
+          cd infra/.scripts
+          . list_collections.sh 100
+          collections=$(cat _list_collections.txt)
+          cp _list_collections.txt ./cache/collections.json
+
+          variables=$(echo $collections | jq '[ .[] | { key: "collection_\(.name)", value: .id }]')
+          . prepare_env.sh "$variables"
+          cp _prepare_env.txt env_collections.sh
