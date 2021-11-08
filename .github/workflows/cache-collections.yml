@@ -38,6 +38,7 @@ jobs:
           token: ${{ secrets.github-token }} 
 
       - name: use cache
+        id: use-cache
         uses: actions/cache@v2
         with:
           path: ~/.appwrite/cache
@@ -45,7 +46,7 @@ jobs:
 
       - name: build cache
         id: build-cache
-        if: inputs.force || steps.cache-primes.outputs.cache-hit != 'true'
+        if: inputs.force || steps.use-cache.outputs.cache-hit != 'true'
 
         run: |
           [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache

@@ -48,6 +48,7 @@ jobs:
 
       - name: set environment
         run: |
+          ls ~/.appwrite/cache 
           . ~/.appwrite/cache/env_collections.sh
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
