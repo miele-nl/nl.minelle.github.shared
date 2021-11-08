@@ -34,6 +34,8 @@ on:
         required: true
       github-token:
         required: true
+      evernote-token:
+        required: false
 
 env:
   APPWRITE_PROJECT: ${{ secrets.appwrite-project }}
@@ -41,6 +43,7 @@ env:
   APPWRITE_ENDPOINT: ${{ secrets.appwrite-endpoint }}
   APPWRITE_FUNCTION_NAME: ${{ inputs.function-name }}
   APPWRITE_FUNCTION_APIKEY: ${{ secrets.function-apikey }}
+  EVERNOTE_TOKEN: ${{ secrets.evernote-token }}
 
 jobs:
 
@@ -66,10 +69,8 @@ jobs:
         run: |
           cd infra/.scripts
           . get_latest_commit.sh \
-              "${{ inputs.github-api-url }}" \
               "${{ inputs.infra-repository }}" \
               "${{ inputs.infra-repository-branch }}" \
-              "${{ inputs.github-actor }}" \
               "${{ secrets.github-token }}" 
           commit=$(cat _get_latest_commit.txt)
           echo $commit
