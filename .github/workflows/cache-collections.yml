@@ -67,8 +67,8 @@ jobs:
           path: ~/.appwrite/cache
           key: ${{ secrets.appwrite-project }}-${{ steps.latest-commit.outputs.commit }}
 
-      - name: build cache
-        id: build-cache
+      - name: build cache collections
+        id: build-cache collections
         if: steps.use-cache.outputs.cache-hit != 'true'
 
         run: |
@@ -80,3 +80,17 @@ jobs:
           variables=$(echo $collections | jq '[ .[] | { key: "collection_\(.name)", value: ."$id" }]')
           . prepare_env.sh "$variables"
           cp _prepare_env.txt ~/.appwrite/cache/env_collections.sh
+
+      - name: build cache functions
+        id: build-cache functions
+        if: steps.use-cache.outputs.cache-hit != 'true'
+
+        run: |
+          [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
+          cd infra/.scripts
+          . list_functions.sh 100
+          functions=$(cat _list_functions.txt)
+          cp _list_functions.txt ~/.appwrite/cache/functions.json
+          variables=$(echo $functions | jq '[ .[] | { key: "function_\(.name)", value: ."$id" }]')
+          . prepare_env.sh "$variables"
+          cp _prepare_env.txt ~/.appwrite/cache/env_functions.sh

@@ -106,7 +106,6 @@ jobs:
         if: ${{ steps.get-function-id.outputs.functionId != '' }}
         run: |
           . ~/.appwrite/cache/env_collections.sh
-          env | grep COLLECTION
           cd infra/.scripts
           . update_function.sh \
             "${{ env.APPWRITE_FUNCTION_NAME }}" \
