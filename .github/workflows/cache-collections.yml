@@ -59,7 +59,7 @@ jobs:
               "${{ inputs.infra-repository }}" \
               "${{ inputs.infra-repository-branch }}" \
               "${{ inputs.github-actor }}" \
-              "${{ secrets.github-token }}" \
+              "${{ secrets.github-token }}" 
           commit=$(cat _get_latest_commit.txt)
           echo $commit
           echo "::set-output name=commit::$commit"
