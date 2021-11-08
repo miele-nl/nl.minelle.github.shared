@@ -43,12 +43,12 @@ jobs:
       - name: use cache
         uses: actions/cache@v2
         with:
-          path: './cache'
+          path: ~/.appwrite/cache
           key: ${{ secrets.appwrite-project }}
 
       - name: set environment
         run: |
-          . ./cache/env_collections.sh
+          . ~/.appwrite/cache/env_collections.sh
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: checkout repo
