@@ -10,19 +10,13 @@ on:
         type: string
         required: false
         default: "0.0.0"
-      infra-repository:
+      shared-repository:
         required: true
         type: string
-      infra-repository-branch:
+      shared-repository-branch:
         required: false
         type: string
         default: main
-      github-api-url:
-        type: string
-        required: true
-      github-actor:
-        type: string
-        required: true
     secrets: 
       appwrite-endpoint:
         required: true
@@ -56,11 +50,18 @@ jobs:
       functionId: ${{ steps.get-function-id.outputs.functionId }}
 
     steps:
-      - name: checkout infra
+      - name: shared cache
+        id: shared-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.shared
+          key: ${{ steps.latest-commit.outputs.commit }}
+
+      - name: checkout shared
         uses: actions/checkout@v2
         with:
-          ref: ${{ inputs.infra-repository-branch }}
-          repository: ${{ inputs.infra-repository }}
+          ref: ${{ inputs.shared-repository-branch }}
+          repository: ${{ inputs.shared-repository }}
           path: './infra'
           token: ${{ secrets.github-token }} 
 
@@ -76,8 +77,8 @@ jobs:
           echo $commit
           echo "::set-output name=commit::$commit"
 
-      - name: use cache
-        id: use-cache
+      - name: appwrite cache
+        id: appwrite-cache
         uses: actions/cache@v2
         with:
           path: ~/.appwrite/cache

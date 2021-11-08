@@ -3,19 +3,13 @@ name: cache collection ids
 on:
   workflow_call:
     inputs:
-      infra-repository:
+      shared-repository:
         required: true
         type: string
-      infra-repository-branch:
+      shared-repository-branch:
         required: false
         type: string
         default: main
-      github-api-url:
-        type: string
-        required: true
-      github-actor:
-        type: string
-        required: true
     secrets: 
       appwrite-endpoint:
         required: true
@@ -38,28 +32,42 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: checkout infra
+
+      - name: checkout shared
         uses: actions/checkout@v2
         with:
-          ref: ${{ inputs.infra-repository-branch }}
-          repository: ${{ inputs.infra-repository }}
-          path: './infra'
+          ref: ${{ inputs.shared-repository-branch }}
+          repository: ${{ inputs.shared-repository }}
+          path: './shared'
           token: ${{ secrets.github-token }} 
 
       - name: get latest commit
         id: latest-commit
         run: |
-          cd infra/.scripts
+          cd shared/.scripts
           . get_latest_commit.sh \
-              "${{ inputs.infra-repository }}" \
-              "${{ inputs.infra-repository-branch }}" \
+              "${{ inputs.shared-repository }}" \
+              "${{ inputs.shared-repository-branch }}" \
               "${{ secrets.github-token }}" 
           commit=$(cat _get_latest_commit.txt)
           echo $commit
           echo "::set-output name=commit::$commit"
 
-      - name: use cache
-        id: use-cache
+      - name: scripts cache
+        id: scripts-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.shared
+          key: ${{ steps.latest-commit.outputs.commit }}
+
+      - name: build cache scripts
+        id: build-cache-scripts
+        if: steps.use-cache.outputs.cache-hit != 'true'
+        run: |
+          cp -r ./shared/.scripts ~/.shared
+
+      - name: appwrite cache
+        id: appwrite-cache
         uses: actions/cache@v2
         with:
           path: ~/.appwrite/cache
@@ -71,8 +79,7 @@ jobs:
 
         run: |
           [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
-          cd infra/.scripts
-          . list_collections.sh 100
+          . ~/.shared/list_collections.sh 100
           collections=$(cat _list_collections.txt)
           cp _list_collections.txt ~/.appwrite/cache/collections.json
           variables=$(echo $collections | jq '[ .[] | { key: "collection_\(.name)", value: ."$id" }]')
@@ -85,8 +92,7 @@ jobs:
 
         run: |
           [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
-          cd infra/.scripts
-          . list_functions.sh 100
+          . ~/.shared/list_functions.sh 100
           functions=$(cat _list_functions.txt)
           cp _list_functions.txt ~/.appwrite/cache/functions.json
           variables=$(echo $functions | jq '[ .[] | { key: "function_\(.name)", value: ."$id" }]')
