@@ -78,7 +78,7 @@ jobs:
             # collectionId=$(echo ${{ matrix.collections }} | jq -r '.id')
 
             varname=$(echo "collection_$collectionName" | tr [:lower:] [:upper:]
-            cmd=$(echo "export $varname=$collectionId
+            cmd=$(echo "export $varname=$collectionId")
             echo $cmd
             eval $cmd
             
