@@ -78,10 +78,8 @@ jobs:
             # collectionId=$(echo ${{ matrix.collections }} | jq -r '.id')
 
             varname=$(echo "collection_$collectionName" | tr [:lower:] [:upper:])
-            cmd=$(echo "export $varname=$collectionId")
-            echo $cmd
-            eval $cmd
-            
+            echo "export $varname=$collectionId" >> env.sh
+            cat env.sh
   infra:
     name: deploy function infra
     runs-on: self-hosted
@@ -122,6 +120,7 @@ jobs:
         id: update-function
         if: ${{ steps.get-function-id.outputs.functionId != '' }}
         run: |
+          eval $(cat env.sh)
           cd infra/.scripts
           . update_function.sh \
             "${{ env.APPWRITE_FUNCTION_NAME }}" \
