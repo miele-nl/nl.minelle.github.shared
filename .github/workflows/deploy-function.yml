@@ -10,6 +10,13 @@ on:
         type: string
         required: false
         default: "0.0.0"
+      infra-repository:
+        required: true
+        type: string
+      infra-repository-branch:
+        required: false
+        type: string
+        default: main
     secrets: 
       appwrite-endpoint:
         required: true
@@ -56,10 +63,12 @@ jobs:
         uses: actions/checkout@v2
         with:
           path: './artifacts'
+
       - name: checkout infra
         uses: actions/checkout@v2
         with:
-          repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
+          ref: ${{ inputs.infra-repository-branch }}
+          repository: ${{ inputs.infra-repository }}
           path: './infra'
           token: ${{ secrets.github-token }} 
 
@@ -106,7 +115,8 @@ jobs:
       - name: checkout infra
         uses: actions/checkout@v2
         with:
-          repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
+          ref: ${{ inputs.infra-repository-branch }}
+          repository: ${{ inputs.infra-repository }}
           path: './infra'
           token: ${{ secrets.github-token }} 
         
@@ -170,7 +180,8 @@ jobs:
       - name: checkout infra
         uses: actions/checkout@v2
         with:
-          repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
+          ref: ${{ inputs.infra-repository-branch }}
+          repository: ${{ inputs.infra-repository }}
           path: './infra'
           token: ${{ secrets.github-token }} 
         
