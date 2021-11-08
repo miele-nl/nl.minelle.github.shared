@@ -57,7 +57,7 @@ jobs:
             name: .name,
             id: ."$id"
             } ]')
-          echo "::set-output name=collections::$matrix"
+          echo "::set-output name=collections::{ \"collections\": $matrix }"
           echo $matrix
 
   environment:
