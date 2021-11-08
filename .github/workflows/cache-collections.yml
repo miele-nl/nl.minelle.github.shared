@@ -14,7 +14,12 @@ on:
         required: false
         type: string
         default: main
-
+      github-api-url:
+        type: string
+        required: true
+      github-actor:
+        type: string
+        required: true
     secrets: 
       appwrite-endpoint:
         required: true
@@ -50,12 +55,12 @@ jobs:
         run: |
           cd infra/.scripts
           . get_latest_commit.sh \
-              "$GITHUB_API_URL" \
+              "${{ inputs.github-api-url }}" \
               "${{ inputs.infra-repository }}" \
               "${{ inputs.infra-repository-branch }}" \
-              "$GITHUB_ACTOR" \
+              "${{ inputs.github-actor }}" \
               "${{ secrets.github-token }}" \
-          commit=$(cat _get_lates_commit.txt)
+          commit=$(cat _get_latest_commit.txt)
           echo $commit
           echo "::set-output name=commit::$commit"
 
