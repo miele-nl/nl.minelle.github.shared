@@ -79,4 +79,4 @@ jobs:
           cp _list_collections.txt ~/.appwrite/cache/collections.json
           variables=$(echo $collections | jq '[ .[] | { key: "collection_\(.name)", value: ."$id" }]')
           . prepare_env.sh "$variables"
-          cp _prepare_env.txt env_collections.sh
+          cp _prepare_env.txt ~/.appwrite/cache/env_collections.sh
