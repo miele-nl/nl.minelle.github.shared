@@ -7,6 +7,14 @@ on:
         type: boolean
         required: false
         default: false
+      infra-repository:
+        required: true
+        type: string
+      infra-repository-branch:
+        required: false
+        type: string
+        default: main
+
     secrets: 
       appwrite-endpoint:
         required: true
@@ -32,21 +40,35 @@ jobs:
       - name: checkout infra
         uses: actions/checkout@v2
         with:
-          ref: list-collections
-          repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
+          ref: ${{ inputs.infra-repository-branch }}
+          repository: ${{ inputs.infra-repository }}
           path: './infra'
           token: ${{ secrets.github-token }} 
+
+      - name: get latest commit
+        id: latest-commit
+        run: |
+          cd infra/.scripts
+          . get_latest_commit.sh \
+              "$GITHUB_API_URL" \
+              "${{ inputs.infra-repository }}" \
+              "${{ inputs.infra-repository-branch }}" \
+              "$GITHUB_ACTOR" \
+              "${{ secrets.github-token }}" \
+          commit=$(cat _get_lates_commit.txt)
+          echo $commit
+          echo "::set-output name=commit::$commit"
 
       - name: use cache
         id: use-cache
         uses: actions/cache@v2
         with:
           path: ~/.appwrite/cache
-          key: ${{ secrets.appwrite-project }}
+          key: ${{ secrets.appwrite-project }}-${{ steps.latest-commit.outputs.commit }}
 
       - name: build cache
         id: build-cache
-        if: inputs.force-rebuild || steps.use-cache.outputs.cache-hit != 'true'
+        if: steps.use-cache.outputs.cache-hit != 'true'
 
         run: |
           [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
