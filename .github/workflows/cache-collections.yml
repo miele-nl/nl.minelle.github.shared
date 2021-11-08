@@ -40,7 +40,7 @@ jobs:
       - name: use cache
         uses: actions/cache@v2
         with:
-          path: './cache'
+          path: ~/.appwrite/cache
           key: ${{ secrets.appwrite-project }}
 
       - name: build cache
@@ -48,10 +48,11 @@ jobs:
         if: inputs.force || steps.cache-primes.outputs.cache-hit != 'true'
 
         run: |
+          [ -d ~/.appwrite/cache ] || mkdir ~/.appwrite/cache
           cd infra/.scripts
           . list_collections.sh 100
           collections=$(cat _list_collections.txt)
-          cp _list_collections.txt ./cache/collections.json
+          cp _list_collections.txt ~/.appwrite/cache/collections.json
 
           variables=$(echo $collections | jq '[ .[] | { key: "collection_\(.name)", value: .id }]')
           . prepare_env.sh "$variables"
