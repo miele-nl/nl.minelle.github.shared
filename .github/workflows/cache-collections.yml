@@ -48,7 +48,7 @@ jobs:
         if: inputs.force || steps.cache-primes.outputs.cache-hit != 'true'
 
         run: |
-          [ -d ~/.appwrite/cache ] || mkdir ~/.appwrite/cache
+          [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
           cd infra/.scripts
           . list_collections.sh 100
           collections=$(cat _list_collections.txt)
