@@ -34,5 +34,5 @@ if [ "$message" == "null" ]; then
     fi
 else
     echo "ERROR searching collection: $message"
-    #exit 1;
+    exit 1;
 fi

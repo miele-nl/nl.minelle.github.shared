@@ -1,8 +1,6 @@
 collectionName=$1
 
-path=$(echo "$(dirname ${BASH_SOURCE[@]})")
-echo "$path/search_collection.sh"
-. "$path/search_collection.sh"
+. search_collection.sh
 return_code=$?
 
 echo "the return code was $return_code"
@@ -17,5 +15,5 @@ if [[ "$return_code" -eq 0 ]]; then
     echo $collectionId > _get_collection_id.txt
 else
     echo "exit $return_code"
-    #exit $return_code
+    exit $return_code
 fi

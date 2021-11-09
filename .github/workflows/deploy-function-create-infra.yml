@@ -62,7 +62,8 @@ jobs:
       - name: get function id
         id: get-function-id
         run: |
-          . ~/.shared/get_function_id.sh "${{ steps.get-function-name.outputs.functionName }}"
+          ~/.shared
+          . get_function_id.sh "${{ steps.get-function-name.outputs.functionName }}"
           functionId=$(cat _get_function_id.txt)
           echo "::set-output name=functionId::$functionId"
 
@@ -70,7 +71,8 @@ jobs:
         id: create-function
         if: ${{ steps.get-function-id.outputs.functionId == '' }}
         run: |
-          .  ~/.shared/create_function.sh \
+          ~/.shared
+          . create_function.sh \
             "${{ steps.get-function-name.outputs.functionName }}" \
             "${{ inputs.path }}/${{ matrix.files }}"
           functionId=$(cat _create_function.txt)

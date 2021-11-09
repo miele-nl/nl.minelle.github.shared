@@ -50,7 +50,8 @@ jobs:
 
         run: |
           [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
-          . ~/.shared/list_collections.sh 100
+          cd ~/.shared
+          . list_collections.sh 100
           collections=$(cat _list_collections.txt)
           cp _list_collections.txt ~/.appwrite/cache/collections.json
           variables=$(echo $collections | jq '[ .[] | { key: "collection_\(.name)", value: ."$id" }]')
@@ -63,7 +64,8 @@ jobs:
 
         run: |
           [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
-          . ~/.shared/list_functions.sh 100
+          cd ~/.shared
+          . list_functions.sh 100
           functions=$(cat _list_functions.txt)
           cp _list_functions.txt ~/.appwrite/cache/functions.json
           variables=$(echo $functions | jq '[ .[] | { key: "function_\(.name)", value: ."$id" }]')

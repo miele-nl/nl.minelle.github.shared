@@ -65,13 +65,11 @@ jobs:
           collectionName=$(jq -r '.name' <<< $collectionJson)
           echo "::set-output name=collectionName::$collectionName"
 
-      - name: check cache
-        run: ls ~/.shared/
-
       - name: get collection id
         id: get-collection-id
         run: |
-          . ~/.shared/get_collection_id.sh "${{ steps.get-collection-name.outputs.collectionName }}"
+          cd ~/.shared
+          . get_collection_id.sh "${{ steps.get-collection-name.outputs.collectionName }}"
           collectionId=$(cat _get_collection_id.txt)
           echo "::set-output name=collectionId::$collectionId"
 
@@ -79,7 +77,8 @@ jobs:
         id: create-collection
         if: ${{ steps.get-collection-id.outputs.collectionId == '' }}
         run: |
-          . ~/.shared/create_collection.sh \
+          cd ~/.shared
+          . create_collection.sh \
             "${{ steps.get-collection-name.outputs.collectionName }}" 
           collectionId=$(cat _create_collection.txt)
           echo "::set-output name=collectionId::$collectionId"
