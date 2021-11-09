@@ -58,6 +58,7 @@ jobs:
       - name: get collection name
         id: get-collection-name
         run: |
+          cat ${{ inputs.path }}/${{ matrix.files }}
           collectionName=$(cat ${{ inputs.path }}/${{ matrix.files }} | jq -r '.name')
           echo "::set-output name=collectionName::$collectionName"
 
@@ -80,6 +81,11 @@ jobs:
           name="${{ steps.get-collection-name.outputs.collectionName }}"
           collectionId=$(eval "echo \$$(echo collections_${name//-/_} | tr [:lower:] [:upper:] )")
           echo "::set-output name=collectionId::$collectionId"
+
+      - name: check
+        run: |
+          echo "collectionId: ${{ steps.set-collection-id.outputs.collectionId }}"
+          echo "collectionName: ${{ steps.get-collection-name.outputs.collectionName }}"
 
       - name: update collection
         id: update-collection
