@@ -9,10 +9,7 @@ on:
       path:
         type: string
         required: true
-      scripts-cache-version:
-        type: string
-        required: true
-      appwrite-cache-version:
+      shared-cache-version:
         type: string
         required: true
     secrets: 
@@ -39,19 +36,12 @@ jobs:
 
     steps:
       # load the cache
-      - name: scripts cache
-        id: scripts-cache
+      - name: shared cache
+        id: shared-cache
         uses: actions/cache@v2
         with:
           path: ~/.shared
-          key: scripts-${{ inputs.scripts-cache-version }}
-
-      - name: appwrite cache
-        id: appwrite-cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.appwrite/cache
-          key: ${{ secrets.appwrite-project }}-${{ inputs.appwrite-cache-version }}
+          key: shared-${{ inputs.shared-cache-version }}
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: checkout repo
@@ -62,8 +52,7 @@ jobs:
       - name: get function name
         id: get-function-name
         run: |
-          functionJson=$(cat ${{ inputs.path }}/${{ matrix.files }})
-          functionName=$(jq -r '.name' <<< $functionJson)
+          functionName=$(cat ${{ inputs.path }}/${{ matrix.files }} | jq -r '.name')
           echo "::set-output name=functionName::$functionName"
 
       - name: get function id
@@ -72,10 +61,6 @@ jobs:
           .  ~/.appwrite/cache/env_functions.sh
           name="${{ steps.get-function-name.outputs.functionName }}"
           functionId=$(eval "echo \$$(echo functions_${name//-/_} | tr [:lower:] [:upper:] )"")
-          echo $functionId
-          # cd artifacts/.scripts
-          # . get_function_id.sh "${{ steps.get-function-name.outputs.functionName }}"
-          # functionId=$(cat _get_function_id.txt)
           echo "::set-output name=functionId::$functionId"
 
       - name: create function

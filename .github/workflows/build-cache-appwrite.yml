@@ -1,17 +1,12 @@
-name: cache collection ids
+name: build appwrite cache
 
 on:
   workflow_call:
     inputs:
-      shared-repository:
-        required: false
+      shared-cache-version:
+        required: true
         type: string
-        default: something-non-existant
-      shared-repository-branch:
-        required: false
-        type: string
-        default: main
-      scripts-version:
+      version:
         required: true
         type: string
     secrets: 
@@ -20,8 +15,6 @@ on:
       appwrite-project:
         required: true
       appwrite-apikey:
-        required: true
-      github-token:
         required: true
 
 env:
@@ -37,46 +30,19 @@ jobs:
 
     steps:
 
-      - name: scripts cache
-        id: scripts-cache
+      - name: shared cache
+        id: shared-cache
         uses: actions/cache@v2
         with:
           path: ~/.shared
-          key: scripts-v${{ inputs.scripts-version }}
-
-      - name: checkout shared
-        uses: actions/checkout@v2
-        if: steps.scripts-cache.outputs.cache-hit != 'true'
-        with:
-          ref: ${{ inputs.shared-repository-branch }}
-          repository: ${{ inputs.shared-repository }}
-          path: './shared'
-          token: ${{ secrets.github-token }} 
-
-      - name: build cache scripts
-        id: build-cache-scripts
-        if: steps.scripts-cache.outputs.cache-hit != 'true'
-        run: |
-          [ -d ~/.shared ] || mkdir -p ~/.shared
-          cp -r ./shared/.scripts ~/.shared
-
-      - name: get latest commit
-        id: latest-commit
-        run: |
-          . ~/.shared/get_latest_commit.sh \
-              "${{ inputs.shared-repository }}" \
-              "${{ inputs.shared-repository-branch }}" \
-              "${{ secrets.github-token }}" 
-          commit=$(cat _get_latest_commit.txt)
-          echo $commit
-          echo "::set-output name=commit::$commit"
+          key: shared-v${{ inputs.shared-cache-version }}
 
       - name: appwrite cache
         id: appwrite-cache
         uses: actions/cache@v2
         with:
           path: ~/.appwrite/cache
-          key: ${{ secrets.appwrite-project }}-${{ steps.latest-commit.outputs.commit }}
+          key: ${{ secrets.appwrite-project }}-${{ inputs.version }}
 
       - name: build cache collections
         id: build-cache-collections
