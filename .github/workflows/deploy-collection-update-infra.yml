@@ -29,27 +29,10 @@ env:
   APPWRITE_ENDPOINT: ${{ secrets.appwrite-endpoint }}
 
 jobs:
-  init:
-    # first create all empty collections, because document type rules must reference a collection ID
-    name: create empty
-    runs-on: self-hosted
-
-    strategy:
-      fail-fast: true
-      matrix: ${{ fromJson(inputs.files) }}
-
-    outputs:
-      collectionId: ${{ steps.set-collection-id.outputs.collectionId }}
-      collectionName: "${{ steps.get-collection-name.outputs.collectionName }}"
-
-    steps:
 
   update:
     name: update
     runs-on: self-hosted
-
-    needs:
-      - init
 
     strategy:
       fail-fast: true
