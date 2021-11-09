@@ -80,7 +80,6 @@ jobs:
           .  ~/.appwrite/cache/env_collections.sh
           name="${{ steps.get-collection-name.outputs.collectionName }}"
           cmd="echo $(echo \$collection_${name//-/_} | tr [:lower:] [:upper:] )"
-          echo $cmd
           collectionId=$(eval $cmd)
           echo "::set-output name=collectionId::$collectionId"
 
@@ -95,7 +94,7 @@ jobs:
           . ~/.appwrite/cache/env_collections.sh
           cd ~/.shared
           . update_collection.sh \
-            "${{ steps.get-collection-name.outputs.name }}" \
+            "${{ steps.get-collection-name.outputs.collectionName }}" \
             "${{ steps.get-collection-id.outputs.collectionId }}" \
             "${{ inputs.path }}/${{ matrix.files }}"
 
