@@ -33,5 +33,5 @@ if [ "$message" == "null" ]; then
     fi
 else
     echo "ERROR searching function: $message"
-    exit 500;
+    exit 1;
 fi
