@@ -14,9 +14,6 @@ on:
       version:
         required: true
         type: string
-    secrets: 
-      github-token:
-        required: true
 
 jobs:
   build-cache:
@@ -40,7 +37,6 @@ jobs:
           repository: ${{ inputs.shared-repository }}
           ref: ${{ inputs.shared-repository-branch }}
           path: './shared'
-          token: ${{ secrets.github-token }} 
 
       - name: build cache shared
         id: build-cache-shared
