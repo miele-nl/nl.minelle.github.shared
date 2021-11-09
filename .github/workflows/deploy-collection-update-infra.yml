@@ -80,7 +80,9 @@ jobs:
         run: |
           .  ~/.appwrite/cache/env_collections.sh
           name="${{ steps.get-collection-name.outputs.collectionName }}"
-          collectionId=$(eval "echo \$$(echo collections_${name//-/_} | tr [:lower:] [:upper:] )")
+          cmd="echo $(echo \$collections_${name//-/_} | tr [:lower:] [:upper:] )"
+          echo $cmd
+          collectionId=$(eval $cmd)
           echo $collectionId
           echo "::set-output name=collectionId::$collectionId"
 
