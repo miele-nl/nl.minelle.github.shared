@@ -64,7 +64,7 @@ jobs:
       - name: get collection id
         id: get-collection-id
         run: |
-          . ~/shared/get_collection_id.sh "${{ steps.get-collection-name.outputs.collectionName }}"
+          . ~/.shared/get_collection_id.sh "${{ steps.get-collection-name.outputs.collectionName }}"
           collectionId=$(cat _get_collection_id.txt)
           echo "::set-output name=collectionId::$collectionId"
 
