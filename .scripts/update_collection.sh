@@ -14,7 +14,7 @@ echo $(echo $collectionJson | jq --arg collectionId $collectionId \
         read: .read, 
         write: .write, 
         rules: .rules
-    }' <<< $functionJson) > tmp.json
+    }') > tmp.json
 
 echo $(cat tmp.json)
 
