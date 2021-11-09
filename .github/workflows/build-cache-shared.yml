@@ -36,12 +36,4 @@ jobs:
         with:
           repository: ${{ inputs.shared-repository }}
           ref: ${{ inputs.shared-repository-branch }}
-          path: './shared'
-
-      - name: build cache shared
-        id: build-cache-shared
-        if: steps.shared-cache.outputs.cache-hit != 'true'
-        run: |
-          [ -d ~/.shared ] || mkdir -p ~/.shared
-          cp -r ./shared/.scripts ~/.shared
-
+          path: '~/.shared'
