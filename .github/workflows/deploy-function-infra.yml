@@ -9,6 +9,12 @@ on:
       path:
         type: string
         required: true
+      scripts-cache-version:
+        type: string
+        required: true
+      appwrite-cache-version:
+        type: string
+        required: true
     secrets: 
       appwrite-endpoint:
         required: true
@@ -32,6 +38,21 @@ jobs:
       matrix: ${{ fromJson(inputs.files) }}
 
     steps:
+      # load the cache
+      - name: scripts cache
+        id: scripts-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.shared
+          key: scripts-${{ inputs.scripts-cache-version }}
+
+      - name: appwrite cache
+        id: appwrite-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.appwrite/cache
+          key: ${{ secrets.appwrite-project }}-${{ inputs.appwrite-cache-version }}
+
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: checkout repo
         uses: actions/checkout@v2
@@ -48,17 +69,20 @@ jobs:
       - name: get function id
         id: get-function-id
         run: |
-          cd artifacts/.scripts
-          . get_function_id.sh "${{ steps.get-function-name.outputs.functionName }}"
-          functionId=$(cat _get_function_id.txt)
+          .  ~/.appwrite/cache/env_functions.sh
+          name="${{ steps.get-function-name.outputs.functionName }}"
+          functionId=$(eval "echo \$$(echo functions_${name//-/_} | tr [:lower:] [:upper:] )"")
+          echo $functionId
+          # cd artifacts/.scripts
+          # . get_function_id.sh "${{ steps.get-function-name.outputs.functionName }}"
+          # functionId=$(cat _get_function_id.txt)
           echo "::set-output name=functionId::$functionId"
 
       - name: create function
         id: create-function
         if: ${{ steps.get-function-id.outputs.functionId == '' }}
         run: |
-          cd artifacts/.scripts
-          . create_function.sh \
+          .  ~/.shared/create_function.sh \
             "${{ steps.get-function-name.outputs.functionName }}" \
             "${{ inputs.path }}/${{ matrix.files }}"
           functionId=$(cat _create_function.txt)

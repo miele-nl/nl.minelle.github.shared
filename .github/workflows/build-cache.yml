@@ -4,12 +4,16 @@ on:
   workflow_call:
     inputs:
       shared-repository:
-        required: true
+        required: false
         type: string
+        default: something-non-existant
       shared-repository-branch:
         required: false
         type: string
         default: main
+      scripts-version:
+        required: true
+        type: string
     secrets: 
       appwrite-endpoint:
         required: true
@@ -33,38 +37,39 @@ jobs:
 
     steps:
 
+      - name: scripts cache
+        id: scripts-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.shared
+          key: scripts-v${{ inputs.scripts-version }}
+
       - name: checkout shared
         uses: actions/checkout@v2
+        if: steps.scripts-cache.outputs.cache-hit != 'true'
         with:
           ref: ${{ inputs.shared-repository-branch }}
           repository: ${{ inputs.shared-repository }}
           path: './shared'
           token: ${{ secrets.github-token }} 
 
+      - name: build cache scripts
+        id: build-cache-scripts
+        if: steps.scripts-cache.outputs.cache-hit != 'true'
+        run: |
+          [ -d ~/.shared ] || mkdir -p ~/.shared
+          cp -r ./shared/.scripts ~/.shared
+
       - name: get latest commit
         id: latest-commit
         run: |
-          cd shared/.scripts
-          . get_latest_commit.sh \
+          . ~/.shared/get_latest_commit.sh \
               "${{ inputs.shared-repository }}" \
               "${{ inputs.shared-repository-branch }}" \
               "${{ secrets.github-token }}" 
           commit=$(cat _get_latest_commit.txt)
           echo $commit
           echo "::set-output name=commit::$commit"
-
-      - name: scripts cache
-        id: scripts-cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.shared
-          key: ${{ steps.latest-commit.outputs.commit }}
-
-      - name: build cache scripts
-        id: build-cache-scripts
-        if: steps.use-cache.outputs.cache-hit != 'true'
-        run: |
-          cp -r ./shared/.scripts ~/.shared
 
       - name: appwrite cache
         id: appwrite-cache
@@ -75,7 +80,7 @@ jobs:
 
       - name: build cache collections
         id: build-cache-collections
-        if: steps.use-cache.outputs.cache-hit != 'true'
+        if: steps.appwrite-cache.outputs.cache-hit != 'true'
 
         run: |
           [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
@@ -88,7 +93,7 @@ jobs:
 
       - name: build cache functions
         id: build-cache-functions
-        if: steps.use-cache.outputs.cache-hit != 'true'
+        if: steps.appwrite-cache.outputs.cache-hit != 'true'
 
         run: |
           [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache

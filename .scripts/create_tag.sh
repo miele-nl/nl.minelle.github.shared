@@ -6,17 +6,6 @@ path=$4
 echo "create tag for function $functionId with template $templateFile"
 echo "code: $codeFile"
 
-## build tag json
-# tagJson=$(envsubst < $templateFile)
-# echo $(jq --arg functionId $functionId \
-#     --arg code $codeFile \
-#     '{ 
-#         functionId: $functionId, 
-#         command: .command, 
-#         code: $code 
-#     }' <<< $tagJson) > tmp.json
-
-# echo $(cat tmp.json)
 command=$(cat $path$templateFile | jq -r '.command')
 echo $command
 
