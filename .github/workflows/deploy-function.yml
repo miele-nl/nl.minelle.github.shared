@@ -41,8 +41,11 @@ jobs:
 
     outputs:
       functionId: ${{ steps.get-function-id.outputs.functionId }}
-
+      
     steps:
+      - name: check cache key
+        run:  echo "shared-${{ inputs.shared-cache-version }}"
+        
       - name: shared cache
         id: shared-cache
         uses: actions/cache@v2
