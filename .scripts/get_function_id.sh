@@ -1,6 +1,7 @@
 functionName=$1
 
-. ./search_function.sh
+path=echo $(dirname ${BASH_SOURCE[@]})
+. $path/search_function.sh
 return_code=$?
 
 echo "the return code was $return_code"

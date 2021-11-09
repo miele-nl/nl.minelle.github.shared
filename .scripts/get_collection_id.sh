@@ -1,6 +1,7 @@
 collectionName=$1
 
-. ./search_collection.sh
+path=echo $(dirname ${BASH_SOURCE[@]})
+. $path/search_collection.sh
 return_code=$?
 
 echo "the return code was $return_code"
