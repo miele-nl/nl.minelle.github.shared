@@ -62,7 +62,7 @@ jobs:
           echo "::set-output name=collectionName::$collectionName"
 
       - name: check cache
-        run: ls ~/.shared
+        run: ls ~/.shared/
 
       - name: get collection id
         id: get-collection-id

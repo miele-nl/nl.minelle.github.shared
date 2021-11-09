@@ -18,7 +18,7 @@ on:
 jobs:
   build-cache:
     # first create all empty collections, because document type rules must reference a collection ID
-    name: cache 
+    name: build cache 
     runs-on: self-hosted
 
     steps:
@@ -43,5 +43,6 @@ jobs:
         if: steps.shared-cache.outputs.cache-hit != 'true'
         run: |
           [ -d ~/.shared ] || mkdir -p ~/.shared
-          cp -r ./shared/.scripts ~/.shared
+          cp -avr ./shared/.scripts ~/.shared
+          
 
