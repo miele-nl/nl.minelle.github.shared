@@ -58,9 +58,8 @@ jobs:
       - name: get collection name
         id: get-collection-name
         run: |
-          cat ${{ inputs.path }}/${{ matrix.files }}
           collectionName=$(cat ${{ inputs.path }}/${{ matrix.files }} | jq -r '.name')
-          
+          echo 
           echo "::set-output name=collectionName::$collectionName"
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
