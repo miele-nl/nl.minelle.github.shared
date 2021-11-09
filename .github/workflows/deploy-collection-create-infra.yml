@@ -61,10 +61,12 @@ jobs:
           collectionName=$(jq -r '.name' <<< $collectionJson)
           echo "::set-output name=collectionName::$collectionName"
 
+      - name: check cache
+        run: ls ~/shared/
+
       - name: get collection id
         id: get-collection-id
         run: |
-          ls ~/.shared/
           . ~/.shared/get_collection_id.sh "${{ steps.get-collection-name.outputs.collectionName }}"
           collectionId=$(cat _get_collection_id.txt)
           echo "::set-output name=collectionId::$collectionId"
