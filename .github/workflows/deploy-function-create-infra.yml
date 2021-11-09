@@ -43,6 +43,10 @@ jobs:
           path: ~/.shared
           key: shared-${{ inputs.shared-cache-version }}
 
+      - name: shared cache check
+        if: ${{ steps.shared-cache.outputs.cache-hit != 'true' }}
+        run: exit 1
+
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: checkout repo
         uses: actions/checkout@v2
@@ -58,9 +62,8 @@ jobs:
       - name: get function id
         id: get-function-id
         run: |
-          .  ~/.appwrite/cache/env_functions.sh
-          name="${{ steps.get-function-name.outputs.functionName }}"
-          functionId=$(eval "echo \$$(echo functions_${name//-/_} | tr [:lower:] [:upper:] )"")
+          . ~/.shared/get_function_id.sh "${{ steps.get-function-name.outputs.functionName }}"
+          functionId=$(cat _get_function_id.txt)
           echo "::set-output name=functionId::$functionId"
 
       - name: create function

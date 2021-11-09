@@ -48,6 +48,10 @@ jobs:
           path: ~/.shared
           key: shared-${{ inputs.shared-cache-version }}
 
+      - name: cache check
+        if: ${{ steps.shared-cache.outputs.cache-hit != 'true' }}
+        run: exit 1
+
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: checkout repo
         uses: actions/checkout@v2
