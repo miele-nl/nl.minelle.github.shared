@@ -1,6 +1,6 @@
 collectionName=$1
 collectionId=$2
-templateFile=$4
+templateFile=$3
 
 echo "update collection $collectionName ($collectionId) from template $templateFile"
 
@@ -25,7 +25,7 @@ listJson=$(curl -s \
     -X PUT \
     -d @tmp.json \
     $APPWRITE_ENDPOINT/database/collections/$collectionId)
-    
+
 echo "update result: $listJson"
 # test if result is valid json
 echo $listJson | jq empty > /dev/null 2>&1
