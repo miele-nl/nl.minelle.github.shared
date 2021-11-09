@@ -32,7 +32,7 @@ jobs:
 
       - name: checkout shared
         uses: actions/checkout@v2
-        if: steps.shared-cache.outputs.cache-hit != 'true'
+        # if: steps.shared-cache.outputs.cache-hit != 'true'
         with:
           repository: ${{ inputs.shared-repository }}
           ref: ${{ inputs.shared-repository-branch }}
@@ -40,9 +40,9 @@ jobs:
 
       - name: build cache shared
         id: build-cache-shared
-        if: steps.shared-cache.outputs.cache-hit != 'true'
+        # if: steps.shared-cache.outputs.cache-hit != 'true'
         run: |
           [ -d ~/.shared ] || mkdir -p ~/.shared
-          cp -avr ./shared/.scripts ~/.shared
+          cp -avr ./shared/.scripts/*.* ~/.shared
           
 
