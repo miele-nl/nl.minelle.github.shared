@@ -22,6 +22,11 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: check input
+        run: |
+          echo "repository: ${{ inputs.shared-repository }}"
+          echo "branch ${{ inputs.shared-repository-branch }}"
+          echo "version ${{ intpus.version }}"
 
       - name: shared cache
         id: shared-cache
