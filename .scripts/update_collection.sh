@@ -2,6 +2,10 @@ collectionName=$1
 collectionId=$2
 templateFile=$3
 
+echo $3
+echo $templateFile
+env
+
 echo "update collection $collectionName ($collectionId) from template $templateFile"
 
 ## build function json
