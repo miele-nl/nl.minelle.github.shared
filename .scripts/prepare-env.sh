@@ -1,5 +1,9 @@
 variables=$1
 
+if [[ -z $1 ]]; then
+  variables="[]"
+fi
+
 # read each item in the JSON array to an item in the Bash array
 readarray -t vars < <(echo $variables | jq -c '.[]')
 

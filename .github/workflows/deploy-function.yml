@@ -81,7 +81,7 @@ jobs:
         id: get-function-id
         run: |
           cd ~/.shared
-          . get_function_id.sh "${{ steps.get-function-name.outputs.functionName }}"
+          . get-function-id.sh "${{ steps.get-function-name.outputs.functionName }}"
           functionId=$(cat _get_function_id.txt)
           echo "::set-output name=functionId::$functionId"
 
@@ -97,7 +97,7 @@ jobs:
           . ~/.appwrite/cache/env_collections.sh
 
           cd ~/.shared
-          . update_function.sh \
+          . update-function.sh \
             "${{ steps.get-function-name.outputs.functionName }}" \
             "${{ steps.get-function-id.outputs.functionId }}" \
             "$GITHUB_WORKSPACE/artifacts/.ci/function.json"
@@ -162,7 +162,7 @@ jobs:
         id: create-tag
         run: |
           cd ~/.shared
-          . create_tag.sh \
+          . create-tag.sh \
             "${{ needs.infra.outputs.functionId }}" \
             "${{ steps.build.outputs.codeFile }}" \
             ".ci/tag.json" \
@@ -199,7 +199,7 @@ jobs:
         id: deploy-tag
         run: |
           cd ~/.shared
-          . update_function_tag.sh \
+          . update-function-tag.sh \
             "${{ needs.infra.outputs.functionId }}" \
             "${{ needs.build.outputs.tagId }}"
 

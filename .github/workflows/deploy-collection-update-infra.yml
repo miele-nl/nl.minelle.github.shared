@@ -59,7 +59,6 @@ jobs:
         id: get-collection-name
         run: |
           collectionName=$(cat ${{ inputs.path }}/${{ matrix.files }} | jq -r '.name')
-          echo 
           echo "::set-output name=collectionName::$collectionName"
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -93,7 +92,7 @@ jobs:
         run: |
           . ~/.appwrite/cache/env_collections.sh
           cd ~/.shared
-          . update_collection.sh \
+          . update-collection.sh \
             "${{ steps.get-collection-name.outputs.collectionName }}" \
             "${{ steps.get-collection-id.outputs.collectionId }}" \
             "${{ inputs.path }}/${{ matrix.files }}"

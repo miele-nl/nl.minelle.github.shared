@@ -1,5 +1,16 @@
 limit=$1
-echo "list all collections"
+
+if [[ -z $APPWRITE_PROJECT || -z $APPWRITE_APIKEY || -z $APPWRITE_ENDPOINT ]]; then
+    echo "required arguments missing"
+    exit 1
+fi
+
+if [[ -z $1 ]]; then
+    limit=0
+fi
+
+
+echo "list all collections (maximum: $limit)"
 
 listJson=$(curl -s \
     -H "x-appwrite-project:$APPWRITE_PROJECT" \

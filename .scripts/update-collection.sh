@@ -2,6 +2,11 @@ collectionName=$1
 collectionId=$2
 templateFile=$3
 
+if [[ -z $1 || -z $2 || -z $3 || -z $APPWRITE_PROJECT || -z $APPWRITE_APIKEY || -z $APPWRITE_ENDPOINT ]]; then
+    echo "required arguments missing"
+    exit 1
+fi
+
 echo "update collection $collectionName ($collectionId) from template $templateFile"
 
 ## build function json

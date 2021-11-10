@@ -1,5 +1,10 @@
 functionName=$1
 
+if [[ -z $1 || -z $APPWRITE_PROJECT || -z $APPWRITE_APIKEY || -z $APPWRITE_ENDPOINT ]]; then
+    echo "required arguments missing"
+    exit 1
+fi
+
 echo "checking for existance of function $functionName"
 
 # remove from '-' characters onwards, otherwise listfunctions will not find function
