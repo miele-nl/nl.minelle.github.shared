@@ -3,17 +3,17 @@ name: build shared cache
 on:
   workflow_call:
     inputs:
-      shared-repository:
-        required: false
-        type: string
-        default: something-non-existant
-      shared-repository-branch:
+      branch:
         required: false
         type: string
         default: main
       version:
         required: true
         type: string
+    secrets:
+      repository:
+        required: false
+
 
 jobs:
   build-cache:
@@ -24,8 +24,8 @@ jobs:
     steps:
       - name: check input
         run: |
-          echo "repository: ${{ inputs.shared-repository }}"
-          echo "branch ${{ inputs.shared-repository-branch }}"
+          echo "repository: ${{ secrets.repository }}"
+          echo "branch ${{ inputs.branch }}"
           echo "version ${{ inputs.version }}"
 
       - name: shared cache
@@ -39,8 +39,8 @@ jobs:
         uses: actions/checkout@v2
         if: steps.shared-cache.outputs.cache-hit != 'true'
         with:
-          repository: ${{ inputs.shared-repository }}
-          ref: ${{ inputs.shared-repository-branch }}
+          repository: ${{ secrets.repository }}
+          ref: ${{ inputs.branch }}
           path: './shared'
 
       - name: build cache shared
