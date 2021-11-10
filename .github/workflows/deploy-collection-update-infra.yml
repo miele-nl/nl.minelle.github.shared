@@ -92,7 +92,7 @@ jobs:
         run: |
           . ~/.appwrite/cache/env_collections.sh
           cd ~/.shared
-          . update_collection.sh \
+          . update-collection.sh \
             "${{ steps.get-collection-name.outputs.collectionName }}" \
             "${{ steps.get-collection-id.outputs.collectionId }}" \
             "${{ inputs.path }}/${{ matrix.files }}"

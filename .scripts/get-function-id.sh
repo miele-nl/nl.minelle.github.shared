@@ -1,5 +1,10 @@
 functionName=$1
 
+if [[ -z $1 ]]; then
+    echo "required arguments missing"
+    exit 1
+fi
+
 . search_function.sh
 return_code=$?
 
