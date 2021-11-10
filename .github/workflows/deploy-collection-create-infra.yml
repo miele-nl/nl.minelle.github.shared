@@ -1,4 +1,4 @@
-name: deploy collection reusable workflow
+name: create empty collection reusable workflow
 
 on:
   workflow_call:
@@ -7,6 +7,9 @@ on:
         type: string
         required: true
       path:
+        type: string
+        required: true
+      shared-cache-version:
         type: string
         required: true
     secrets: 
@@ -34,8 +37,21 @@ jobs:
 
     outputs:
       collectionId: ${{ steps.set-collection-id.outputs.collectionId }}
+      collectionName: "${{ steps.get-collection-name.outputs.collectionName }}"
 
     steps:
+      # load the cache
+      - name: shared cache
+        id: shared-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.shared
+          key: shared-${{ inputs.shared-cache-version }}
+
+      - name: cache check
+        if: ${{ steps.shared-cache.outputs.cache-hit != 'true' }}
+        run: exit 1
+
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: checkout repo
         uses: actions/checkout@v2
@@ -52,7 +68,7 @@ jobs:
       - name: get collection id
         id: get-collection-id
         run: |
-          cd artifacts/.scripts
+          cd ~/.shared
           . get_collection_id.sh "${{ steps.get-collection-name.outputs.collectionName }}"
           collectionId=$(cat _get_collection_id.txt)
           echo "::set-output name=collectionId::$collectionId"
@@ -61,7 +77,7 @@ jobs:
         id: create-collection
         if: ${{ steps.get-collection-id.outputs.collectionId == '' }}
         run: |
-          cd artifacts/.scripts
+          cd ~/.shared
           . create_collection.sh \
             "${{ steps.get-collection-name.outputs.collectionName }}" 
           collectionId=$(cat _create_collection.txt)
@@ -79,57 +95,5 @@ jobs:
       - name: check
         run: |
           echo "collectionId: ${{ steps.set-collection-id.outputs.collectionId }}"
-
-  update:
-    name: update
-    runs-on: self-hosted
-
-    needs:
-      - init
-
-    strategy:
-      fail-fast: true
-      matrix: ${{ fromJson(inputs.files) }}
-
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: checkout repo
-        uses: actions/checkout@v2
-        with:
-          path: './artifacts'
-
-      - name: get collection name
-        id: get-collection-name
-        run: |
-          collectionJson=$(cat ${{ inputs.path }}/${{ matrix.files }})
-          collectionName=$(jq -r '.name' <<< $collectionJson)
-          echo "::set-output name=name::$collectionName"
-
-      - name: get collection id
-        id: get-collection-id
-        run: |
-          cd artifacts/.scripts
-          . get_collection_id.sh "${{ steps.get-collection-name.outputs.name }}"
-          collectionId=$(cat _get_collection_id.txt)
-          echo "::set-output name=collectionId::$collectionId"
-
-      - name: prepare rules
-        id: prepare-rules
-        run: |
-          cd artifacts/.scripts
-          . prepare_rules.sh \
-            "${{ inputs.path }}/${{ matrix.files }}"
-          rules=$(cat _prepare_rules.txt)
-          echo "::set-output name=rules::$rules"
-
-      - name: update collection
-        id: update-collection
-        run: |
-          cd artifacts/.scripts
-          . update_collection.sh \
-            "${{ steps.get-collection-name.outputs.name }}" \
-            "${{ steps.get-collection-id.outputs.collectionId }}" \
-            '${{ steps.prepare-rules.outputs.rules }}' \
-            "${{ inputs.path }}/${{ matrix.files }}"
-
+          echo "collectionName: ${{ steps.get-collection-name.outputs.collectionName }}"
 

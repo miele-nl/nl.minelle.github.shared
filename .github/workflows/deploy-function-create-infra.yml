@@ -9,6 +9,9 @@ on:
       path:
         type: string
         required: true
+      shared-cache-version:
+        type: string
+        required: true
     secrets: 
       appwrite-endpoint:
         required: true
@@ -32,6 +35,18 @@ jobs:
       matrix: ${{ fromJson(inputs.files) }}
 
     steps:
+      # load the cache
+      - name: shared cache
+        id: shared-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.shared
+          key: shared-${{ inputs.shared-cache-version }}
+
+      - name: shared cache check
+        if: ${{ steps.shared-cache.outputs.cache-hit != 'true' }}
+        run: exit 1
+
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: checkout repo
         uses: actions/checkout@v2
@@ -41,14 +56,13 @@ jobs:
       - name: get function name
         id: get-function-name
         run: |
-          functionJson=$(cat ${{ inputs.path }}/${{ matrix.files }})
-          functionName=$(jq -r '.name' <<< $functionJson)
+          functionName=$(cat ${{ inputs.path }}/${{ matrix.files }} | jq -r '.name')
           echo "::set-output name=functionName::$functionName"
 
       - name: get function id
         id: get-function-id
         run: |
-          cd artifacts/.scripts
+          cd ~/.shared
           . get_function_id.sh "${{ steps.get-function-name.outputs.functionName }}"
           functionId=$(cat _get_function_id.txt)
           echo "::set-output name=functionId::$functionId"
@@ -57,7 +71,7 @@ jobs:
         id: create-function
         if: ${{ steps.get-function-id.outputs.functionId == '' }}
         run: |
-          cd artifacts/.scripts
+          cd ~/.shared
           . create_function.sh \
             "${{ steps.get-function-name.outputs.functionName }}" \
             "${{ inputs.path }}/${{ matrix.files }}"

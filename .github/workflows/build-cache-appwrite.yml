@@ -1,0 +1,73 @@
+name: build appwrite cache
+
+on:
+  workflow_call:
+    inputs:
+      shared-cache-version:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+    secrets: 
+      appwrite-endpoint:
+        required: true
+      appwrite-project:
+        required: true
+      appwrite-apikey:
+        required: true
+
+env:
+  APPWRITE_PROJECT: ${{ secrets.appwrite-project }}
+  APPWRITE_APIKEY: ${{ secrets.appwrite-apikey }}
+  APPWRITE_ENDPOINT: ${{ secrets.appwrite-endpoint }}
+
+jobs:
+  build-cache:
+    # first create all empty collections, because document type rules must reference a collection ID
+    name: cache 
+    runs-on: self-hosted
+
+    steps:
+
+      - name: shared cache
+        id: shared-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.shared
+          key: shared-${{ inputs.shared-cache-version }}
+
+      - name: appwrite cache
+        id: appwrite-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.appwrite/cache
+          key: ${{ secrets.appwrite-project }}-${{ inputs.version }}
+
+      - name: build cache collections
+        id: build-cache-collections
+        if: steps.appwrite-cache.outputs.cache-hit != 'true'
+
+        run: |
+          [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
+          cd ~/.shared
+          . list_collections.sh 100
+          collections=$(cat _list_collections.txt)
+          cp _list_collections.txt ~/.appwrite/cache/collections.json
+          variables=$(echo $collections | jq '[ .[] | { key: "collection_\(.name)", value: ."$id" }]')
+          . prepare_env.sh "$variables"
+          cp _prepare_env.txt ~/.appwrite/cache/env_collections.sh
+
+      - name: build cache functions
+        id: build-cache-functions
+        if: steps.appwrite-cache.outputs.cache-hit != 'true'
+
+        run: |
+          [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
+          cd ~/.shared
+          . list_functions.sh 100
+          functions=$(cat _list_functions.txt)
+          cp _list_functions.txt ~/.appwrite/cache/functions.json
+          variables=$(echo $functions | jq '[ .[] | { key: "function_\(.name)", value: ."$id" }]')
+          . prepare_env.sh "$variables"
+          cp _prepare_env.txt ~/.appwrite/cache/env_functions.sh

@@ -3,13 +3,16 @@ name: deploy function reusable workflow
 on:
   workflow_call:
     inputs:
-      function-name:
-        type: string
-        required: true
       version:
         type: string
         required: false
         default: "0.0.0"
+      shared-cache-version:
+        type: string
+        required: true
+      appwrite-cache-version:
+        type: string
+        required: true
     secrets: 
       appwrite-endpoint:
         required: true
@@ -19,47 +22,71 @@ on:
         required: true
       function-apikey:
         required: true
-      github-token:
-        required: true
+      evernote-token:
+        required: false
 
 env:
   APPWRITE_PROJECT: ${{ secrets.appwrite-project }}
   APPWRITE_APIKEY: ${{ secrets.appwrite-apikey }}
   APPWRITE_ENDPOINT: ${{ secrets.appwrite-endpoint }}
-  APPWRITE_FUNCTION_NAME: ${{ inputs.function-name }}
   APPWRITE_FUNCTION_APIKEY: ${{ secrets.function-apikey }}
+  EVERNOTE_TOKEN: ${{ secrets.evernote-token }}
 
 jobs:
+
+
   infra:
     name: deploy function infra
     runs-on: self-hosted
 
     outputs:
       functionId: ${{ steps.get-function-id.outputs.functionId }}
-
+      
     steps:
+      - name: shared cache
+        id: shared-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.shared
+          key: shared-${{ inputs.shared-cache-version }}
+
+      - name: shared cache check
+        if: ${{ steps.shared-cache.outputs.cache-hit != 'true' }}
+        run: exit 1
+
+      - name: appwrite cache
+        id: appwrite-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.appwrite/cache
+          key: ${{ secrets.appwrite-project }}-${{ inputs.appwrite-cache-version }}
+
+      - name: appwrite cache check
+        if: ${{ steps.appwrite-cache.outputs.cache-hit != 'true' }}
+        run: exit 1
+
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: checkout repo
         uses: actions/checkout@v2
         with:
           path: './artifacts'
-      - name: checkout infra
-        uses: actions/checkout@v2
-        with:
-          repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
-          path: './infra'
-          token: ${{ secrets.github-token }} 
+
+      - name: get function name
+        id: get-function-name
+        run: |
+          functionName=$(cat $GITHUB_WORKSPACE/artifacts/.ci/function.json | jq -r '.name')
+          echo "::set-output name=functionName::$functionName"
 
       - name: get function id
         id: get-function-id
         run: |
-          cd infra/.scripts
-          . get_function_id.sh "${{ env.APPWRITE_FUNCTION_NAME }}"
+          cd ~/.shared
+          . get_function_id.sh "${{ steps.get-function-name.outputs.functionName }}"
           functionId=$(cat _get_function_id.txt)
           echo "::set-output name=functionId::$functionId"
 
-      - name: fail if function does not exist
-        id: fail-if-not-found
+      - name: fail if function not found
+        id: fail-if-function-not-found
         if: ${{ steps.get-function-id.outputs.functionId == '' }}
         run: exit 1
 
@@ -67,9 +94,11 @@ jobs:
         id: update-function
         if: ${{ steps.get-function-id.outputs.functionId != '' }}
         run: |
-          cd infra/.scripts
+          . ~/.appwrite/cache/env_collections.sh
+
+          cd ~/.shared
           . update_function.sh \
-            "${{ env.APPWRITE_FUNCTION_NAME }}" \
+            "${{ steps.get-function-name.outputs.functionName }}" \
             "${{ steps.get-function-id.outputs.functionId }}" \
             "$GITHUB_WORKSPACE/artifacts/.ci/function.json"
 
@@ -84,26 +113,21 @@ jobs:
       tagId: ${{ steps.create-tag.outputs.tagId }}
 
     steps:
-
       - name: checkout repo
         uses: actions/checkout@v2
         with:
           path: './artifacts'
 
-      - name: checkout infra
-        uses: actions/checkout@v2
+      - name: shared cache
+        id: shared-cache
+        uses: actions/cache@v2
         with:
-          repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
-          path: './infra'
-          token: ${{ secrets.github-token }} 
-        
-      # - name: initialize build
-      #   id: build-init
-      #   run: |
-      #     [ ! -d "package" ] && mkdir package
-      #     tagJson=$(cat $GITHUB_WORKSPACE/artifacts/.ci/tag.json)
-      #     codeFile=$(jq -r '.code' <<< $tagJson)
-      #     echo "::set-output name=codeFile::$GITHUB_WORKSPACE/package/$codeFile"
+          path: ~/.shared
+          key: shared-${{ inputs.shared-cache-version }}
+
+      - name: shared cache check
+        if: ${{ steps.shared-cache.outputs.cache-hit != 'true' }}
+        run: exit 1
 
       - name: Use Node.js
         uses: actions/setup-node@v2
@@ -112,8 +136,6 @@ jobs:
 
       - name: build
         id: build
-        env:
-          CI: true  
         run: |
           npm install -g bundle-deps
 
@@ -139,13 +161,13 @@ jobs:
       - name: create tag
         id: create-tag
         run: |
-          cd infra/.scripts
+          cd ~/.shared
           . create_tag.sh \
             "${{ needs.infra.outputs.functionId }}" \
             "${{ steps.build.outputs.codeFile }}" \
             ".ci/tag.json" \
             "$GITHUB_WORKSPACE/artifacts/"
-          functionId=$(cat _create_tag.txt)
+          tagId=$(cat _create_tag.txt)
           echo "::set-output name=tagId::$tagId"
 
       - name: check
@@ -162,17 +184,21 @@ jobs:
 
     steps:
 
-      - name: checkout infra
-        uses: actions/checkout@v2
+      - name: shared cache
+        id: shared-cache
+        uses: actions/cache@v2
         with:
-          repository: miele-nl/nl.minelle.concordia.sheetmusic.infra
-          path: './infra'
-          token: ${{ secrets.github-token }} 
+          path: ~/.shared
+          key: shared-${{ inputs.shared-cache-version }}
+
+      - name: shared cache check
+        if: ${{ steps.shared-cache.outputs.cache-hit != 'true' }}
+        run: exit 1
         
       - name: deploy tag
         id: deploy-tag
         run: |
-          cd infra/.scripts
+          cd ~/.shared
           . update_function_tag.sh \
             "${{ needs.infra.outputs.functionId }}" \
             "${{ needs.build.outputs.tagId }}"

@@ -1,0 +1,101 @@
+name: update collection reusable workflow
+
+on:
+  workflow_call:
+    inputs:
+      files:
+        type: string
+        required: true
+      path:
+        type: string
+        required: true
+      shared-cache-version:
+        type: string
+        required: true
+      appwrite-cache-version:
+        type: string
+        required: true
+    secrets: 
+      appwrite-endpoint:
+        required: true
+      appwrite-project:
+        required: true
+      appwrite-apikey:
+        required: true
+
+env:
+  APPWRITE_PROJECT: ${{ secrets.appwrite-project }}
+  APPWRITE_APIKEY: ${{ secrets.appwrite-apikey }}
+  APPWRITE_ENDPOINT: ${{ secrets.appwrite-endpoint }}
+
+jobs:
+
+  update:
+    name: update
+    runs-on: self-hosted
+
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJson(inputs.files) }}
+
+    steps:
+      - name: shared cache
+        id: shared-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.shared
+          key: shared-${{ inputs.shared-cache-version }}
+
+      - name: shared cache check
+        if: ${{ steps.shared-cache.outputs.cache-hit != 'true' }}
+        run: exit 1
+
+      - name: checkout repo
+        uses: actions/checkout@v2
+        with:
+          path: './artifacts'
+
+      - name: get collection name
+        id: get-collection-name
+        run: |
+          collectionName=$(cat ${{ inputs.path }}/${{ matrix.files }} | jq -r '.name')
+          echo 
+          echo "::set-output name=collectionName::$collectionName"
+
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: appwrite cache
+        id: appwrite-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.appwrite/cache
+          key: ${{ secrets.appwrite-project }}-${{ inputs.appwrite-cache-version }}
+
+      - name: appwrite cache check
+        if: ${{ steps.appwrite-cache.outputs.cache-hit != 'true' }}
+        run: exit 1
+
+      - name: get collection id
+        id: get-collection-id
+        run: |
+          .  ~/.appwrite/cache/env_collections.sh
+          name="${{ steps.get-collection-name.outputs.collectionName }}"
+          cmd="echo $(echo \$collection_${name//-/_} | tr [:lower:] [:upper:] )"
+          collectionId=$(eval $cmd)
+          echo "::set-output name=collectionId::$collectionId"
+
+      - name: check
+        run: |
+          echo "collectionId: ${{ steps.get-collection-id.outputs.collectionId }}"
+          echo "collectionName: ${{ steps.get-collection-name.outputs.collectionName }}"
+
+      - name: update collection
+        id: update-collection
+        run: |
+          . ~/.appwrite/cache/env_collections.sh
+          cd ~/.shared
+          . update_collection.sh \
+            "${{ steps.get-collection-name.outputs.collectionName }}" \
+            "${{ steps.get-collection-id.outputs.collectionId }}" \
+            "${{ inputs.path }}/${{ matrix.files }}"
+
+
