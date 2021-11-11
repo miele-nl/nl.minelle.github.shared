@@ -5,7 +5,7 @@ if [[ -z $1 ]]; then
     exit 1
 fi
 
-. search_collection.sh
+. search-collection.sh
 return_code=$?
 
 echo "the return code was $return_code"
