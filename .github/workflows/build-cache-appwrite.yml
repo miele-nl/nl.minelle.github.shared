@@ -46,7 +46,7 @@ jobs:
 
       - name: build cache collections
         id: build-cache-collections
-        if: true || steps.appwrite-cache.outputs.cache-hit != 'true'
+        if: steps.appwrite-cache.outputs.cache-hit != 'true'
 
         run: |
           [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
@@ -62,7 +62,7 @@ jobs:
 
       - name: build cache functions
         id: build-cache-functions
-        if: true || steps.appwrite-cache.outputs.cache-hit != 'true'
+        if: steps.appwrite-cache.outputs.cache-hit != 'true'
 
         run: |
           [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
@@ -78,7 +78,7 @@ jobs:
 
       - name: prepare build parameters
         id: prepare-build-parameters
-        if: true || steps.appwrite-cache.outputs.cache-hit != 'true'
+        if: steps.appwrite-cache.outputs.cache-hit != 'true'
 
         run: |
           [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
