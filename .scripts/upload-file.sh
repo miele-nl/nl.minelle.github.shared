@@ -11,12 +11,14 @@ if [[  -z $1 || -z $2 || -z $3 || -z $4 || -z $5 ]]; then
     exit 1
 fi
 
-ftp -n $ftpHost <<END_SCRIPT
+resp=$(eval "ftp -p -n $ftpHost <<END_SCRIPT
 quote USER $ftpUser
 quote PASS $ftpPassword
 binary
 cd $remoteDir
 put $file
 quit
-END_SCRIPT
+END_SCRIPT")
+
+echo "the response was: $resp"
 exit 0
