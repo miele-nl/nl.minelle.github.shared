@@ -62,7 +62,6 @@ jobs:
     
     # Build apk.
     - run: flutter build apk \
-              --target-platform android-arm64 \
               --build-number $GITHUB_SHA \
               --build-version ${{ needs.initialize.outputs.version }}
 
