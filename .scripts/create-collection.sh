@@ -1,6 +1,6 @@
 collectionName=$1
 
-if [[ -z $1 || -z $APPWRITE_PROJECT || -z $APPWRITE_APIKEY || -z $APPWRITE_ENDPOINT]]; then
+if [[ -z $1 || -z $APPWRITE_PROJECT || -z $APPWRITE_APIKEY || -z $APPWRITE_ENDPOINT ]]; then
     echo "required arguments missing"
     exit 1
 fi
