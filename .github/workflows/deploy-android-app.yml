@@ -7,16 +7,15 @@ on:
         required: false
         type: string
         default: "0.0.0"
+      appwrite-cache-version:
+        required: true
+        type: string
       apk-name: 
         required: true
         type: string
       ftp-server-host:
         type: string
         required: true
-      ftp-server-port:
-        required: false
-        type: number
-        default: 21
       ftp-server-username:
         type: string
         required: true
@@ -28,60 +27,75 @@ jobs:
   build:
     # This job will run on ubuntu virtual machine
     runs-on: self-hosted
-
     steps:
-    
-    # Setup Java environment in order to build the Android app.
-    - uses: actions/checkout@v2
-    - uses: actions/setup-java@v1
-      with:
-        java-version: 12.x
-        java-package: jdk
-    
-    # setup the android sdk
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v2
 
-    # Setup the flutter environment.
-    - uses: subosito/flutter-action@v1
-      with:
-        channel: stable
-        # flutter-version: '1.12.x' # you can also specify exact version of flutter
-    
-    # Get flutter dependencies.
-    - run: flutter pub get
-    
-    # Check for any formatting issues in the code.
-    - run: flutter format --set-exit-if-changed .
-    
-    # Statically analyze the Dart code for any errors.
-    - run: flutter analyze .
-    
-    # Run widget tests for our flutter project.
-    # - run: flutter test
-    
-    # Build apk.
-    - run: flutter build apk \
-              --build-number $GITHUB_SHA \
-              --build-version ${{ needs.initialize.outputs.version }}
-
-    - name: rename apk
-      run: mv build/app/outputs/apk/release/app-release.apk \
-              build/app/outputs/apk/release/concordia-sheetmusic-${{ inputs.apk-name }}.apk
-
-    # Upload generated apk to the artifacts.
-    # - uses: actions/upload-artifact@v1
-    #   with:
-    #     name: release-apk
-    #     path: build/app/outputs/apk/release/app-release.apk
-
-    # - name: upload apk to ftp server
-    #   uses: SamKirkland/FTP-Deploy-Action@4.1.0
-    #   with:
-    #     server: ${{ inputs.ftp-server-host }}
-    #     port: ${{ inputs.ftp-server-port }}
-    #     username: ${{ inputs.ftp-server-username }}
-    #     password: ${{ secrets.ftp-server-password }}
-    #     local-dir: ./build/app/outputs/apk/release/
-    #     server-dir: ./apk/
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 12.x
+          java-package: jdk
       
+      # setup the android sdk
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+
+      # Setup the flutter environment.
+      - uses: subosito/flutter-action@v1
+        with:
+          channel: stable
+          # flutter-version: '1.12.x' # you can also specify exact version of flutter
+      
+      # Get flutter dependencies.
+      - run: flutter pub get
+      
+      # Check for any formatting issues in the code.
+      - run: flutter format --set-exit-if-changed .
+      
+      # Statically analyze the Dart code for any errors.
+      - run: flutter analyze .
+      
+      # Run widget tests for our flutter project.
+      # - run: flutter test
+
+      - name: appwrite cache
+        id: appwrite-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.appwrite/cache
+          key: ${{ secrets.appwrite-project }}-${{ inputs.appwrite-cache-version }}
+
+      - name: appwrite cache check
+        if: ${{ steps.appwrite-cache.outputs.cache-hit != 'true' }}
+        run: exit 1
+
+
+      # Build apk.
+      - name: build apk
+        run: | 
+          param=$(cat ~/.appwrite/cache/build-parameters.txt)
+
+          cmd=$(echo "flutter build apk
+                $param
+                --target-platform android-arm64
+                --build-number $GITHUB_RUN_NUMBER \
+                --build-version ${{ inputs.version }} \
+                --no-pub")
+
+          echo $cmd
+          eval $(echo $cmd)
+
+      - name: rename apk
+        run: | 
+          cd build/app/outputs/flutter-apk
+          mv "app-release.apk" "concordia-sheetmusic-${{ inputs.apk-name }}.apk"
+
+      - name: upload apk to ftp server
+        uses: kevinpainchaud/simple-ftp-deploy-action@v1.2.1
+        with:
+          ftp_host: ${{ inputs.ftp-server-host }}
+          ftp_username: ${{ inputs.ftp-server-username }}
+          ftp_password: ${{ secrets.ftp-server-password }}
+          local_source_dir: "./build/app/outputs/flutter-apk"
+          dist_target_dir: "./apk"
+          delete: "false"
+          exclude: "'app.*'"
