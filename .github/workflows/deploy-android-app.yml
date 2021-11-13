@@ -7,15 +7,25 @@ on:
         required: false
         type: string
         default: "0.0.0"
-      channel:
-        required: false
+      apk-name: 
+        required: true
         type: string
-        default: dev
+        default: "0.0.0"
+    secrets:
+      ftp-server-host:
+        required: true
+      ftp-server-port:
+        required: false
+        default: 21
+      ftp-server-username:
+        required: true
+      ftp-server-password:
+        required: true
     
-jobs:
   build:
     # This job will run on ubuntu virtual machine
     runs-on: self-hosted
+
     steps:
     
     # Setup Java environment in order to build the Android app.
@@ -48,18 +58,28 @@ jobs:
     # - run: flutter test
     
     # Build apk.
-    - run: flutter build apk
+    - run: flutter build apk \
+              --target-platform android-arm64 \
+              --build-number $GITHUB_SHA \
+              --build-version ${{ needs.initialize.outputs.version }}
+
+    - name: rename apk
+      run: mv build/app/outputs/apk/release/app-release.apk \
+              build/app/outputs/apk/release/concordia-sheetmusic-${{ inputs.apk-name }}.apk
 
     # Upload generated apk to the artifacts.
-    - uses: actions/upload-artifact@v1
-      with:
-        name: release-apk
-        path: build/app/outputs/apk/release/app-release.apk
-
-    # - name: Sync files
-    #   uses: SamKirkland/FTP-Deploy-Action@4.1.0
+    # - uses: actions/upload-artifact@v1
     #   with:
-    #     server: ftp.samkirkland.com
-    #     username: myFtpUserName
-    #     password: ${{ secrets.ftp_password }}
+    #     name: release-apk
+    #     path: build/app/outputs/apk/release/app-release.apk
+
+     - name: upload apk to ftp server
+       uses: SamKirkland/FTP-Deploy-Action@4.1.0
+       with:
+         server: ${{ secrets.ftp-server-host }}
+         port: ${{ secrets.ftp-server-port }}
+         username: ${{ secrets.ftp-server-username }}
+         password: ${{ secrets.ftp-server-password }}
+         local-dir: ./build/app/outputs/apk/release/
+         server-dir: ./apk/
       
