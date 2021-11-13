@@ -46,7 +46,7 @@ jobs:
 
       - name: build cache collections
         id: build-cache-collections
-        if: steps.appwrite-cache.outputs.cache-hit != 'true'
+        if: true || steps.appwrite-cache.outputs.cache-hit != 'true'
 
         run: |
           [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
@@ -57,10 +57,12 @@ jobs:
           variables=$(echo $collections | jq '[ .[] | { key: "collection_\(.name)", value: ."$id" }]')
           . prepare-env.sh "$variables"
           cp _prepare_env.txt ~/.appwrite/cache/env_collections.sh
+          . prepare-build.sh "$variables"
+          echo "::set-output name=collection-build-parameters::$(cat _prepare_build.txt)"
 
       - name: build cache functions
         id: build-cache-functions
-        if: steps.appwrite-cache.outputs.cache-hit != 'true'
+        if: true || steps.appwrite-cache.outputs.cache-hit != 'true'
 
         run: |
           [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
@@ -71,3 +73,19 @@ jobs:
           variables=$(echo $functions | jq '[ .[] | { key: "function_\(.name)", value: ."$id" }]')
           . prepare-env.sh "$variables"
           cp _prepare_env.txt ~/.appwrite/cache/env_functions.sh
+          . prepare-build.sh "$variables"
+          echo "::set-output name=function-build-parameters::$(cat _prepare_build.txt)"
+
+      - name: prepare build parameters
+        id: prepare-build-parameters
+        if: true || steps.appwrite-cache.outputs.cache-hit != 'true'
+
+        run: |
+          [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
+
+          echo "--dart-define APPWRITE_PROJECT=${{ secrets.appwrite-projects }} \\
+          --dart-define APPWRITE_ENDPOINT=${{ secrets.appwrite-endpoint }} \\
+          ${{ steps.build-cache-collections.outputs.collection-build-parameters }}
+          ${{ steps.build-cache-functions.outputs.function-build-parameters }}" > build-parameters.txt
+
+          cat build-parameters.txt
