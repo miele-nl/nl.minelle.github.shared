@@ -76,13 +76,13 @@ jobs:
     #     name: release-apk
     #     path: build/app/outputs/apk/release/app-release.apk
 
-    - name: upload apk to ftp server
-      uses: SamKirkland/FTP-Deploy-Action@4.1.0
-      with:
-        server: ${{ inputs.ftp-server-host }}
-        port: ${{ inputs.ftp-server-port }}
-        username: ${{ inputs.ftp-server-username }}
-        password: ${{ secrets.ftp-server-password }}
-        local-dir: ./build/app/outputs/apk/release/
-        server-dir: ./apk/
+    # - name: upload apk to ftp server
+    #   uses: SamKirkland/FTP-Deploy-Action@4.1.0
+    #   with:
+    #     server: ${{ inputs.ftp-server-host }}
+    #     port: ${{ inputs.ftp-server-port }}
+    #     username: ${{ inputs.ftp-server-username }}
+    #     password: ${{ secrets.ftp-server-password }}
+    #     local-dir: ./build/app/outputs/apk/release/
+    #     server-dir: ./apk/
       
