@@ -16,8 +16,7 @@ for var in "${vars[@]}"; do
   stmt="--dart-define ${key//-/_}=\"$value\" \\"
   echo "new statement: $stmt"
 
-  result=$(echo "$result
-  $stmt")
+  result=$(echo "$result $stmt")
 
 done
 
