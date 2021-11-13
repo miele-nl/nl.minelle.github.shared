@@ -20,7 +20,8 @@ on:
         required: true
       ftp-server-password:
         required: true
-    
+        
+jobs:
   build:
     # This job will run on ubuntu virtual machine
     runs-on: self-hosted
