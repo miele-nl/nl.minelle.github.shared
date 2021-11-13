@@ -15,7 +15,7 @@ on:
 jobs:
   build:
     # This job will run on ubuntu virtual machine
-    runs-on: self-hosted
+    runs-on: ubuntu
     steps:
     
     # Setup Java environment in order to build the Android app.
