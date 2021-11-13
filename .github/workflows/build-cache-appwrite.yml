@@ -84,8 +84,8 @@ jobs:
           [ -d ~/.appwrite/cache ] || mkdir -p ~/.appwrite/cache
 
           cd ~/.appwrite/cache
-          echo '--dart-define APPWRITE_PROJECT="${{ secrets.appwrite-project }}" \\
-          --dart-define APPWRITE_ENDPOINT="${{ secrets.appwrite-endpoint }}" \\
+          echo '--dart-define APPWRITE_PROJECT="${{ secrets.appwrite-project }}" \
+          --dart-define APPWRITE_ENDPOINT="${{ secrets.appwrite-endpoint }}" \
           ${{ steps.build-cache-collections.outputs.collection-build-parameters }}
           ${{ steps.build-cache-functions.outputs.function-build-parameters }}' > build-parameters.txt
 
