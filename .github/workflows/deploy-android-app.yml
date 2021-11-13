@@ -11,11 +11,14 @@ on:
         required: true
         type: string
       ftp-server-host:
+        type: string
         required: true
       ftp-server-port:
         required: false
+        type: number
         default: 21
       ftp-server-username:
+        type: string
         required: true
     secrets:
       ftp-server-password:
