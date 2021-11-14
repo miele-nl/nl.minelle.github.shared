@@ -22,6 +22,10 @@ on:
       ftp-server-username:
         type: string
         required: true
+      environment:
+        type: string
+        required: false
+        default: tst
     secrets:
       ftp-server-password:
         required: true
@@ -113,7 +117,7 @@ jobs:
         id: rename-apk
         run: | 
           cd build/app/outputs/flutter-apk
-          filename="concordia-sheetmusic-${{ inputs.apk-name }}.apk"
+          filename="concordia-sheetmusic-${{ inputs.environment }}-${{ inputs.version }}.apk"
           mv "app-release.apk" $filename
           echo "::set-output name=file::$filename"
 
@@ -128,16 +132,16 @@ jobs:
             "./apk" \
             "${{ steps.rename-apk.outputs.file }}"
 
-    - name: upload artifact
-      uses: 'actions/upload-artifact@v2'
-      with:
-        name: "concordia sheetmusic app v${{ inputs.version }}"
-        path: "./build/app/outputs/flutter-apk/${{ steps.rename-apk.outputs.file }}"
+      - name: upload artifact
+        uses: 'actions/upload-artifact@v2'
+        with:
+          name: "concordia sheetmusic app v${{ inputs.version }}"
+          path: "./build/app/outputs/flutter-apk/${{ steps.rename-apk.outputs.file }}"
 
-    - name: create release
-      uses: 1fxe/GitHub-Release-Action@main
-      with:
-        release_token: ${{ secrets.RELEASE_TOKEN }}
-        release_tag: v${{ inputs.version }}
-        release_title: concordia-sheetmusic-app 0.0.1
-        release_file: ${{ steps.rename-apk.outputs.file }}
+      - name: create release
+        uses: 1fxe/GitHub-Release-Action@main
+        with:
+          release_token: ${{ secrets.RELEASE_TOKEN }}
+          release_tag: v${{ inputs.version }}
+          release_title: concordia-sheetmusic-app 0.0.1
+          release_file: ${{ steps.rename-apk.outputs.file }}
