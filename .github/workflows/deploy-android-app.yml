@@ -36,7 +36,7 @@ env:
   APPWRITE_PROJECT: ${{ secrets.appwrite-project }}
   APPWRITE_APIKEY: ${{ secrets.appwrite-apikey }}
   APPWRITE_ENDPOINT: ${{ secrets.appwrite-endpoint }}
-  
+
 jobs:
   build:
     # This job will run on ubuntu virtual machine
@@ -103,7 +103,7 @@ jobs:
                 $param
                 --target-platform android-arm64
                 --build-number $GITHUB_RUN_NUMBER \
-                --build-version ${{ inputs.version }} \
+                --build-name ${{ inputs.version }} \
                 --no-pub")
 
           echo $cmd
