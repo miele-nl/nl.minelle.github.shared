@@ -104,13 +104,14 @@ jobs:
           param=$(cat ~/.appwrite/cache/build-parameters.txt)
 
           cmd=$(echo "flutter build apk
-                $param
-                --target-platform android-arm64
-                --build-number $GITHUB_RUN_NUMBER \
-                --build-name ${{ inputs.version }} \
-                --no-pub")
-
-          echo "::set-output name=cmd::\"$cmd\""
+              $param
+              --dart-define \"ENVIRONMENT=${{ inputs.environment }}\"
+              --target-platform android-arm64
+              --build-number $GITHUB_RUN_NUMBER
+              --build-name ${{ inputs.version }}
+              --no-pub")
+              
+          echo "::set-output name=cmd::$(echo \"$cmd\")"
 
       - name: check build statement
         run: echo ${{ steps.prepare-build-statement.outputs.cmd }}
