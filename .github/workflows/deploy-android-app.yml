@@ -157,4 +157,4 @@ jobs:
           release_token: ${{ secrets.github-token }}
           release_tag: release-${{ inputs.version }}
           release_title: "concordia sheetmusic app v${{ inputs.version }}"
-          release_file: "${{ steps.rename-apk.outputs.fileptah }}/${{ steps.rename-apk.outputs.filename }}"
+          release_file: "${{ steps.rename-apk.outputs.filepath }}/${{ steps.rename-apk.outputs.filename }}"
