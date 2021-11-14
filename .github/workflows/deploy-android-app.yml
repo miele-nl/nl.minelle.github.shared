@@ -110,8 +110,10 @@ jobs:
                 --build-name ${{ inputs.version }} \
                 --no-pub")
 
-          echo $cmd
-          echo "::set-output name=cmd::$cmd"
+          echo "::set-output name=cmd::\"$cmd\""
+
+      - name: check build statement
+        run: echo ${{ steps.prepare-build-statement.outputs.cmd }}
 
       - name: build apk
         if: ${{ false }}
