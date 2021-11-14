@@ -144,6 +144,7 @@ jobs:
             "${{ steps.rename-apk.outputs.filename }}"
 
       - name: upload artifact
+        if: false
         uses: 'actions/upload-artifact@v2'
         with:
           name: "${{ steps.rename-apk.outputs.filename }}"
