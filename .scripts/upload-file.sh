@@ -22,6 +22,8 @@ put $file
 quit
 END_SCRIPT")
 
+echo $resp
+
 # [[ -z "$resp" ]] && exit 0
 
 # echo "ERROR uploading file: $resp"
