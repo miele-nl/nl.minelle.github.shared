@@ -143,11 +143,11 @@ jobs:
             "./apk" \
             "${{ steps.rename-apk.outputs.filename }}"
 
-      # - name: upload artifact
-      #   uses: 'actions/upload-artifact@v2'
-      #   with:
-      #     name: "concordia sheetmusic app v${{ inputs.version }}"
-      #     path: "${{ steps.rename-apk.outputs.filepath }}"
+      - name: upload artifact
+        uses: 'actions/upload-artifact@v2'
+        with:
+          name: "${{ steps.rename-apk.outputs.filename }}"
+          path: "${{ steps.rename-apk.outputs.filepath }}"
 
       - name: create release
         uses: 1fxe/GitHub-Release-Action@main
@@ -155,4 +155,16 @@ jobs:
           release_token: ${{ secrets.github-token }}
           release_tag: v${{ inputs.version }}
           release_title: "concordia sheetmusic app v${{ inputs.version }}"
-          release_file: "${{ steps.rename-apk.outputs.filepath }}"
+          release_file: "${{ steps.rename-apk.outputs.filename }}"
+
+      # - name: create release
+      #   uses: xresloader/upload-to-github-release@master
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.github-token }}
+      #   with:
+      #     file: "${{ steps.rename-apk.outputs.filepath }}"
+      #     delete_file: "random-name-*.txt"
+      #     tags: false
+      #     draft: true
+      #     branches: "master;dev"
+      #     verbose: true          
