@@ -1,0 +1,164 @@
+name: Flutter CI
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: false
+        type: string
+        default: "0.0.0"
+      appwrite-cache-version:
+        required: true
+        type: string
+      shared-cache-version:
+        required: true
+        type: string
+      ftp-server-host:
+        type: string
+        required: true
+      ftp-server-username:
+        type: string
+        required: true
+      environment:
+        type: string
+        required: false
+        default: tst
+    secrets:
+      ftp-server-password:
+        required: true
+      appwrite-endpoint:
+        required: true
+      appwrite-project:
+        required: true
+      appwrite-apikey:
+        required: true
+      github-token:
+        required: true
+
+env:
+  APPWRITE_PROJECT: ${{ secrets.appwrite-project }}
+  APPWRITE_APIKEY: ${{ secrets.appwrite-apikey }}
+  APPWRITE_ENDPOINT: ${{ secrets.appwrite-endpoint }}
+
+jobs:
+  build:
+    # This job will run on ubuntu virtual machine
+    runs-on: self-hosted
+    steps:
+
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 12.x
+          java-package: jdk
+      
+      # setup the android sdk
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+
+      # Setup the flutter environment.
+      - uses: subosito/flutter-action@v1
+        with:
+          channel: stable
+          # flutter-version: '1.12.x' # you can also specify exact version of flutter
+      
+      # Get flutter dependencies.
+      - run: flutter pub get
+      
+      # Check for any formatting issues in the code.
+      - run: flutter format --set-exit-if-changed .
+      
+      # Statically analyze the Dart code for any errors.
+      - run: flutter analyze .
+      
+      # Run widget tests for our flutter project.
+      # - run: flutter test
+
+      - name: shared cache
+        id: shared-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.shared
+          key: shared-${{ inputs.shared-cache-version }}
+
+      - name: shared cache check
+        if: ${{ steps.shared-cache.outputs.cache-hit != 'true' }}
+        run: exit 1
+
+      - name: appwrite cache
+        id: appwrite-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.appwrite/cache
+          key: ${{ secrets.appwrite-project }}-${{ inputs.appwrite-cache-version }}
+
+      - name: appwrite cache check
+        if: ${{ steps.appwrite-cache.outputs.cache-hit != 'true' }}
+        run: exit 1
+
+
+      # Build apk.
+      - name: prepare build statement
+        id: prepare-build-statement
+        run: | 
+          param=$(cat ~/.appwrite/cache/build-parameters.txt)
+
+          cmd=$(echo "flutter build apk
+              $param
+              --dart-define \"ENVIRONMENT=${{ inputs.environment }}\"
+              --target-platform android-arm64
+              --build-number $GITHUB_RUN_NUMBER
+              --build-name ${{ inputs.version }}
+              --no-pub")
+              
+          echo "::set-output name=cmd::$(echo \"$cmd\")"
+
+      - name: check build statement
+        run: echo ${{ steps.prepare-build-statement.outputs.cmd }}
+
+      - name: build apk
+        if: ${{ inputs.environment != 'tst' }}
+        run: | 
+
+          cmd=${{ steps.prepare-build-statement.outputs.cmd }}
+          eval $cmd
+
+      - name: rename apk
+        id: rename-apk
+        if: ${{ inputs.environment != 'tst' }}
+        run: | 
+          [ -d build/app/outputs/flutter-apk ] || mkdir -p build/app/outputs/flutter-apk
+          cd ~/build/app/outputs/flutter-apk
+          filename="concordia-sheetmusic-${{ inputs.environment }}-${{ inputs.version }}.apk"
+          [[ -f "app-release.apk" ]] || echo "release" > app-release.apk
+
+          mv "app-release.apk" $filename
+          echo "::set-output name=filename::$filename"
+          echo "::set-output name=filepath::$(echo ~)/build/app/outputs/flutter-apk"
+
+      - name: check filepath
+        if: ${{ inputs.environment != 'tst' }}
+        run: |
+          echo "name: ${{ steps.rename-apk.outputs.filename }}"
+          echo "path: ${{ steps.rename-apk.outputs.filepath }}"
+
+      - name: upload apk to ftp server
+        if: ${{ inputs.environment == 'acc' }}
+        run: |
+          cd ~/.shared
+          . upload-file.sh \
+            "${{ inputs.ftp-server-host }}" \
+            "${{ inputs.ftp-server-username }}" \
+            "${{ secrets.ftp-server-password }}" \
+            "${{ steps.rename-apk.outputs.filepath }}" \
+            "./apk" \
+            "${{ steps.rename-apk.outputs.filename }}"
+
+      - name: create release
+        if: ${{ inputs.environment == 'prd' }}
+        uses: 1fxe/GitHub-Release-Action@main
+        with:
+          release_token: ${{ secrets.github-token }}
+          release_tag: release-${{ inputs.version }}
+          release_title: "concordia sheetmusic app v${{ inputs.version }}"
+          release_file: "${{ steps.rename-apk.outputs.filepath }}/${{ steps.rename-apk.outputs.filename }}"

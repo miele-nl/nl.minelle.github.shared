@@ -1,7 +1,8 @@
 functionName=$1
 templateFile=$2
 
-if [[ -z $1 || -z $2 || -z $APPWRITE_PROJECT || -z $APPWRITE_APIKEY || -z $APPWRITE_ENDPOINT]]; then
+echo "create function $functionName from template $templateFile"
+if [[ -z $1 || -z $2 || -z $APPWRITE_PROJECT || -z $APPWRITE_APIKEY || -z $APPWRITE_ENDPOINT ]]; then
     echo "required arguments missing"
     exit 1
 fi
