@@ -25,7 +25,18 @@ on:
     secrets:
       ftp-server-password:
         required: true
+      appwrite-endpoint:
+        required: true
+      appwrite-project:
+        required: true
+      appwrite-apikey:
+        required: true
 
+env:
+  APPWRITE_PROJECT: ${{ secrets.appwrite-project }}
+  APPWRITE_APIKEY: ${{ secrets.appwrite-apikey }}
+  APPWRITE_ENDPOINT: ${{ secrets.appwrite-endpoint }}
+  
 jobs:
   build:
     # This job will run on ubuntu virtual machine
