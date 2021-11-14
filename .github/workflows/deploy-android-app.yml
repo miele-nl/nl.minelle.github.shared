@@ -119,10 +119,25 @@ jobs:
 
       - name: upload apk to ftp server
         run: |
-          cd ./build/app/outputs/flutter-apk
-          . ~/.shared/upload-file.sh \
+          cd ~/.shared
+          . upload-file.sh \
             "${{ inputs.ftp-server-host }}" \
             "${{ inputs.ftp-server-username }}" \
             "${{ secrets.ftp-server-password }}" \
+            "./build/app/outputs/flutter-apk" \
             "./apk" \
             "${{ steps.rename-apk.outputs.file }}"
+
+    - name: upload artifact
+      uses: 'actions/upload-artifact@v2'
+      with:
+        name: "concordia sheetmusic app v${{ inputs.version }}"
+        path: "./build/app/outputs/flutter-apk/${{ steps.rename-apk.outputs.file }}"
+
+    - name: create release
+      uses: 1fxe/GitHub-Release-Action@main
+      with:
+        release_token: ${{ secrets.RELEASE_TOKEN }}
+        release_tag: v${{ inputs.version }}
+        release_title: concordia-sheetmusic-app 0.0.1
+        release_file: ${{ steps.rename-apk.outputs.file }}
