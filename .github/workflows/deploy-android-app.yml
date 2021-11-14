@@ -155,7 +155,7 @@ jobs:
           release_token: ${{ secrets.github-token }}
           release_tag: v${{ inputs.version }}
           release_title: "concordia sheetmusic app v${{ inputs.version }}"
-          release_file: "${{ steps.rename-apk.outputs.filename }}"
+          release_file: "/home/docker/build/app/outputs/flutter-apk/${{ steps.rename-apk.outputs.filename }}"
 
       # - name: create release
       #   uses: xresloader/upload-to-github-release@master
