@@ -22,7 +22,7 @@ put $file
 quit
 END_SCRIPT")
 
-[[ -z "$resp" ]] && exit 0
+# [[ -z "$resp" ]] && exit 0
 
-echo $resp
-exit 1
+# echo "ERROR uploading file: $resp"
+# exit 1

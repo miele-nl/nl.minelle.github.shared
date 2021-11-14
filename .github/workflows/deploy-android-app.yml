@@ -98,8 +98,8 @@ jobs:
 
 
       # Build apk.
-      - name: build apk
-        if: ${{ false }}
+      - name: prepare build statement
+        id: prepare-build-statement
         run: | 
           param=$(cat ~/.appwrite/cache/build-parameters.txt)
 
@@ -111,7 +111,14 @@ jobs:
                 --no-pub")
 
           echo $cmd
-          eval $(echo $cmd)
+          echo "::set-output name=cmd::$cmd"
+
+      - name: build apk
+        if: ${{ false }}
+        run: | 
+        
+          cmd=${{ steps.prepare-build-statement.outputs.cmd }}
+          eval $cmd
 
       - name: rename apk
         id: rename-apk
