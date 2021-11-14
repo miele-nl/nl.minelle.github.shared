@@ -132,7 +132,12 @@ jobs:
 
           mv "app-release.apk" $filename
           echo "::set-output name=filename::$filename"
-          echo "::set-output name=filepath::~/build/app/outputs/flutter-apk/$filename"
+          echo "::set-output name=filepath::$(echo ~)/build/app/outputs/flutter-apk"
+
+      - name: check filepath
+        run: |
+          echo "name: ${{ steps.rename-apk.outputs.filename }}"
+          echo "path: ${{ steps.rename-apk.outputs.filepath }}"
 
       - name: upload apk to ftp server
         run: |
@@ -141,7 +146,7 @@ jobs:
             "${{ inputs.ftp-server-host }}" \
             "${{ inputs.ftp-server-username }}" \
             "${{ secrets.ftp-server-password }}" \
-            "~/build/app/outputs/flutter-apk" \
+            "${{ steps.rename-apk.outputs.filepath }}" \
             "./apk" \
             "${{ steps.rename-apk.outputs.filename }}"
 
@@ -151,4 +156,4 @@ jobs:
           release_token: ${{ secrets.github-token }}
           release_tag: release-${{ inputs.version }}
           release_title: "concordia sheetmusic app v${{ inputs.version }}"
-          release_file: "build/app/outputs/flutter-apk/${{ steps.rename-apk.outputs.filename }}"
+          release_file: "${{ steps.rename-apk.outputs.fileptah }}/${{ steps.rename-apk.outputs.filename }}"
