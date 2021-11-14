@@ -122,7 +122,6 @@ jobs:
 
           cmd=${{ steps.prepare-build-statement.outputs.cmd }}
           eval $cmd
-          pwd
 
       - name: rename apk
         id: rename-apk
@@ -131,14 +130,14 @@ jobs:
           [ -d build/app/outputs/flutter-apk ] || mkdir -p build/app/outputs/flutter-apk
           cd build/app/outputs/flutter-apk
           filename="concordia-sheetmusic-${{ inputs.environment }}-${{ inputs.version }}.apk"
-          # [[ -f "app-release.apk" ]] || echo "release" > app-release.apk
+          [[ -f "app-release.apk" ]] || echo "release" > app-release.apk
 
           mv "app-release.apk" $filename
           echo "::set-output name=filename::$filename"
-          echo "::set-output name=filepath::$(echo ~)/build/app/outputs/flutter-apk"
+          echo "::set-output name=filepath::$(pwd)/build/app/outputs/flutter-apk"
 
       - name: check filepath
-        if: ${{ inputs.environment != 'tst' }}
+        # if: ${{ inputs.environment != 'tst' }}
         run: |
           echo "name: ${{ steps.rename-apk.outputs.filename }}"
           echo "path: ${{ steps.rename-apk.outputs.filepath }}"
