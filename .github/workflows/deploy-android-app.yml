@@ -117,12 +117,13 @@ jobs:
         id: rename-apk
         run: | 
           [ -d build/app/outputs/flutter-apk ] || mkdir -p build/app/outputs/flutter-apk
-          cd build/app/outputs/flutter-apk
+          cd ~/build/app/outputs/flutter-apk
           filename="concordia-sheetmusic-${{ inputs.environment }}-${{ inputs.version }}.apk"
           [[ -f "app-release.apk" ]] || echo "release" > app-release.apk
 
           mv "app-release.apk" $filename
-          echo "::set-output name=file::$filename"
+          echo "::set-output name=filename::$filename"
+          echo "::set-output name=filepath::~/build/app/outputs/flutter-apk/$filename"
 
       - name: upload apk to ftp server
         run: |
@@ -131,15 +132,15 @@ jobs:
             "${{ inputs.ftp-server-host }}" \
             "${{ inputs.ftp-server-username }}" \
             "${{ secrets.ftp-server-password }}" \
-            "./build/app/outputs/flutter-apk" \
+            "~/build/app/outputs/flutter-apk" \
             "./apk" \
-            "${{ steps.rename-apk.outputs.file }}"
+            "${{ steps.rename-apk.outputs.filename }}"
 
       - name: upload artifact
         uses: 'actions/upload-artifact@v2'
         with:
           name: "concordia sheetmusic app v${{ inputs.version }}"
-          path: "./build/app/outputs/flutter-apk/${{ steps.rename-apk.outputs.file }}"
+          path: "{{ steps.rename-apk.outputs.filepath }}"
 
       - name: create release
         uses: 1fxe/GitHub-Release-Action@main
@@ -147,4 +148,4 @@ jobs:
           release_token: ${{ secrets.github-token }}
           release_tag: v${{ inputs.version }}
           release_title: concordia-sheetmusic-app 0.0.1
-          release_file: ${{ steps.rename-apk.outputs.file }}
+          release_file: "{{ steps.rename-apk.outputs.filepath }}"
