@@ -134,7 +134,7 @@ jobs:
 
           mv "app-release.apk" $filename
           echo "::set-output name=filename::$filename"
-          echo "::set-output name=filepath::$(pwd)/build/app/outputs/flutter-apk"
+          echo "::set-output name=filepath::$(pwd)"
 
       - name: check filepath
         if: ${{ inputs.environment != 'tst' }}
