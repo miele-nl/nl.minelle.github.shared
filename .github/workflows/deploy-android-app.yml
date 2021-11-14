@@ -10,6 +10,9 @@ on:
       appwrite-cache-version:
         required: true
         type: string
+      shared-cache-version:
+        required: true
+        type: string
       apk-name: 
         required: true
         type: string
@@ -57,6 +60,17 @@ jobs:
       # Run widget tests for our flutter project.
       # - run: flutter test
 
+      - name: shared cache
+        id: shared-cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.shared
+          key: shared-${{ inputs.shared-cache-version }}
+
+      - name: shared cache check
+        if: ${{ steps.shared-cache.outputs.cache-hit != 'true' }}
+        run: exit 1
+
       - name: appwrite cache
         id: appwrite-cache
         uses: actions/cache@v2
@@ -85,17 +99,19 @@ jobs:
           eval $(echo $cmd)
 
       - name: rename apk
+        id: rename-apk
         run: | 
           cd build/app/outputs/flutter-apk
-          mv "app-release.apk" "concordia-sheetmusic-${{ inputs.apk-name }}.apk"
+          filename="concordia-sheetmusic-${{ inputs.apk-name }}.apk"
+          mv "app-release.apk" $filename
+          echo "::set-output name=file::$filename"
 
       - name: upload apk to ftp server
-        uses: kevinpainchaud/simple-ftp-deploy-action@v1.2.1
-        with:
-          ftp_host: ${{ inputs.ftp-server-host }}
-          ftp_username: ${{ inputs.ftp-server-username }}
-          ftp_password: ${{ secrets.ftp-server-password }}
-          local_source_dir: "./build/app/outputs/flutter-apk"
-          dist_target_dir: "./apk"
-          delete: "false"
-          exclude: "'app.*'"
+        run: |
+          cd ./build/app/outputs/flutter-apk
+          . ~/.shared/upload-file.sh \
+            "${{ inputs.ftp-server-host }}" \
+            "${{ inputs.ftp-server-username }}" \
+            "${{ secrets.ftp-server-password }}" \
+            "./apk" \
+            "${{ steps.rename-apk.outputs.file }}"

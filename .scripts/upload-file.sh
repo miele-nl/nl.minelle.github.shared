@@ -20,5 +20,7 @@ put $file
 quit
 END_SCRIPT")
 
-echo "the response was: $resp"
-exit 0
+[[ -z "$resp" ]] && exit 0
+
+echo $resp
+exit 1
