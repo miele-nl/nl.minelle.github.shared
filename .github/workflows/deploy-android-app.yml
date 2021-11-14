@@ -116,7 +116,7 @@ jobs:
       - name: rename apk
         id: rename-apk
         run: | 
-          [ -d ~/build/app/outputs/flutter-apk ] || mkdir -p ~/build/app/outputs/flutter-apk
+          [ -d build/app/outputs/flutter-apk ] || mkdir -p build/app/outputs/flutter-apk
           cd build/app/outputs/flutter-apk
           filename="concordia-sheetmusic-${{ inputs.environment }}-${{ inputs.version }}.apk"
           [[ -f "app-release.apk" ]] || echo "release" > app-release.apk
