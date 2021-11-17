@@ -12,7 +12,7 @@ echo "update function $functionName ($functionId) from template $templateFile"
 
 ## build function json
 functionJson=$(envsubst < $templateFile)
-echo $(echo "$functionJson" | "jq --arg functionId $functionId \
+echo $(echo "$functionJson" | jq --arg functionId $functionId \
     --arg functionName $functionName \
     '{ 
         name: $functionName, 
